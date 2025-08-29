@@ -98,6 +98,6 @@ public final class NoTreePunching
             return InteractionResult.sidedSuccess(level.isClientSide);
         });
 
-        Config.INSTANCE.load();
+        Config.load();
     }
 }

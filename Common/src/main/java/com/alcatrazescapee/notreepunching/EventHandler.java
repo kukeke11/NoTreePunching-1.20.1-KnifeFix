@@ -48,9 +48,9 @@ public final class EventHandler
         {
             if (!level.isClientSide)
             {
-                if (level.random.nextFloat() < Config.INSTANCE.flintKnappingConsumeChance.getAsFloat())
+                if (level.random.nextFloat() < Config.FLINT_KNAPPING_CONSUME_CHANCE.get())
                 {
-                    if (level.random.nextFloat() < Config.INSTANCE.flintKnappingSuccessChance.getAsFloat())
+                    if (level.random.nextFloat() < Config.FLINT_KNAPPING_SUCCESS_CHANCE.get())
                     {
                         Direction face = targetedFace == null ? Direction.UP : targetedFace;
                         Containers.dropItemStack(level, pos.getX() + 0.5 + face.getStepX() * 0.5, pos.getY() + 0.5 + face.getStepY() * 0.5, pos.getZ() + 0.5 + face.getStepZ() * 0.5, new ItemStack(ModItems.FLINT_SHARD.get(), 2));
@@ -68,7 +68,7 @@ public final class EventHandler
     public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher)
     {
         dispatcher.register(Commands.literal("notreepunchingReloadConfig").requires(c -> c.hasPermission(2)).executes(source -> {
-            Config.INSTANCE.load();
+            Config.load();
             return Command.SINGLE_SUCCESS;
         }));
     }

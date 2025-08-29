@@ -51,7 +51,7 @@ public class ModRecipes
     @Deprecated(forRemoval = true)
     public static void injectRecipes(ReloadableServerResources resources, RegistryAccess registryAccess)
     {
-        if (!Config.INSTANCE.enableDynamicRecipeReplacement.getAsBoolean()) return;
+        if (!Config.ENABLE_DYNAMIC_RECIPE_REPLACEMENT.get()) return;
 
         final Set<Item> logItems = new HashSet<>();
         final Set<Item> plankItems = new HashSet<>();

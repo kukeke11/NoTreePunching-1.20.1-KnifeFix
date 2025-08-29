@@ -19,28 +19,60 @@ import com.alcatrazescapee.notreepunching.platform.XPlatform;
  * Compatibility layer that maintains the same interface as the original Epsilon config
  * while using Forge Config API under the hood.
  */
-public enum Config
+public final class Config
 {
-    INSTANCE;
-
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    // Config value wrappers that maintain the original interface
-    public final ConfigValue<Boolean> enableDynamicRecipeReplacement = new ConfigValue<>(() -> ForgeConfig.enableDynamicRecipeReplacement.get());
-    public final ConfigValue<Boolean> enableLooseRocksWorldGen = new ConfigValue<>(() -> ForgeConfig.enableLooseRocksWorldGen.get());
-    public final ConfigValue<Boolean> doBlocksMineWithoutCorrectTool = new ConfigValue<>(() -> ForgeConfig.doBlocksMineWithoutCorrectTool.get());
-    public final ConfigValue<Boolean> doInstantBreakBlocksMineWithoutCorrectTool = new ConfigValue<>(() -> ForgeConfig.doInstantBreakBlocksMineWithoutCorrectTool.get());
-    public final ConfigValue<Boolean> doBlocksDropWithoutCorrectTool = new ConfigValue<>(() -> ForgeConfig.doBlocksDropWithoutCorrectTool.get());
-    public final ConfigValue<Boolean> doInstantBreakBlocksDropWithoutCorrectTool = new ConfigValue<>(() -> ForgeConfig.doInstantBreakBlocksDropWithoutCorrectTool.get());
-    public final ConfigValue<Boolean> doInstantBreakBlocksDamageKnives = new ConfigValue<>(() -> ForgeConfig.doInstantBreakBlocksDamageKnives.get());
+    // Static config value constants for cleaner access patterns
+    public static final ConfigValue<Boolean> ENABLE_DYNAMIC_RECIPE_REPLACEMENT = new ConfigValue<>(() -> ForgeConfig.enableDynamicRecipeReplacement.get());
+    public static final ConfigValue<Boolean> ENABLE_LOOSE_ROCKS_WORLD_GEN = new ConfigValue<>(() -> ForgeConfig.enableLooseRocksWorldGen.get());
+    public static final ConfigValue<Boolean> DO_BLOCKS_MINE_WITHOUT_CORRECT_TOOL = new ConfigValue<>(() -> ForgeConfig.doBlocksMineWithoutCorrectTool.get());
+    public static final ConfigValue<Boolean> DO_INSTANT_BREAK_BLOCKS_MINE_WITHOUT_CORRECT_TOOL = new ConfigValue<>(() -> ForgeConfig.doInstantBreakBlocksMineWithoutCorrectTool.get());
+    public static final ConfigValue<Boolean> DO_BLOCKS_DROP_WITHOUT_CORRECT_TOOL = new ConfigValue<>(() -> ForgeConfig.doBlocksDropWithoutCorrectTool.get());
+    public static final ConfigValue<Boolean> DO_INSTANT_BREAK_BLOCKS_DROP_WITHOUT_CORRECT_TOOL = new ConfigValue<>(() -> ForgeConfig.doInstantBreakBlocksDropWithoutCorrectTool.get());
+    public static final ConfigValue<Boolean> DO_INSTANT_BREAK_BLOCKS_DAMAGE_KNIVES = new ConfigValue<>(() -> ForgeConfig.doInstantBreakBlocksDamageKnives.get());
 
-    public final ConfigValue<Float> flintKnappingConsumeChance = new ConfigValue<>(() -> ForgeConfig.flintKnappingConsumeChance.get().floatValue());
-    public final ConfigValue<Float> flintKnappingSuccessChance = new ConfigValue<>(() -> ForgeConfig.flintKnappingSuccessChance.get().floatValue());
-    public final ConfigValue<Float> fireStarterFireStartChance = new ConfigValue<>(() -> ForgeConfig.fireStarterFireStartChance.get().floatValue());
-    public final ConfigValue<Boolean> fireStarterCanMakeCampfire = new ConfigValue<>(() -> ForgeConfig.fireStarterCanMakeCampfire.get());
-    public final ConfigValue<Boolean> fireStarterCanMakeSoulCampfire = new ConfigValue<>(() -> ForgeConfig.fireStarterCanMakeSoulCampfire.get());
-    public final ConfigValue<Boolean> largeVesselKeepsContentsWhenBroken = new ConfigValue<>(() -> ForgeConfig.largeVesselKeepsContentsWhenBroken.get());
-    public final ConfigValue<List<Block>> potteryBlockSequences = new ConfigValue<>(ForgeConfig::getPotteryBlockSequence);
+    public static final ConfigValue<Float> FLINT_KNAPPING_CONSUME_CHANCE = new ConfigValue<>(() -> ForgeConfig.flintKnappingConsumeChance.get().floatValue());
+    public static final ConfigValue<Float> FLINT_KNAPPING_SUCCESS_CHANCE = new ConfigValue<>(() -> ForgeConfig.flintKnappingSuccessChance.get().floatValue());
+    public static final ConfigValue<Float> FIRE_STARTER_FIRE_START_CHANCE = new ConfigValue<>(() -> ForgeConfig.fireStarterFireStartChance.get().floatValue());
+    public static final ConfigValue<Boolean> FIRE_STARTER_CAN_MAKE_CAMPFIRE = new ConfigValue<>(() -> ForgeConfig.fireStarterCanMakeCampfire.get());
+    public static final ConfigValue<Boolean> FIRE_STARTER_CAN_MAKE_SOUL_CAMPFIRE = new ConfigValue<>(() -> ForgeConfig.fireStarterCanMakeSoulCampfire.get());
+    public static final ConfigValue<Boolean> LARGE_VESSEL_KEEPS_CONTENTS_WHEN_BROKEN = new ConfigValue<>(() -> ForgeConfig.largeVesselKeepsContentsWhenBroken.get());
+    public static final ConfigValue<List<Block>> POTTERY_BLOCK_SEQUENCES = new ConfigValue<>(ForgeConfig::getPotteryBlockSequence);
+
+    // Keep INSTANCE for backward compatibility during transition
+    @Deprecated
+    public static final Config INSTANCE = new Config();
+    
+    // Instance fields for backward compatibility - will be removed in future version
+    @Deprecated
+    public final ConfigValue<Boolean> enableDynamicRecipeReplacement = ENABLE_DYNAMIC_RECIPE_REPLACEMENT;
+    @Deprecated
+    public final ConfigValue<Boolean> enableLooseRocksWorldGen = ENABLE_LOOSE_ROCKS_WORLD_GEN;
+    @Deprecated
+    public final ConfigValue<Boolean> doBlocksMineWithoutCorrectTool = DO_BLOCKS_MINE_WITHOUT_CORRECT_TOOL;
+    @Deprecated
+    public final ConfigValue<Boolean> doInstantBreakBlocksMineWithoutCorrectTool = DO_INSTANT_BREAK_BLOCKS_MINE_WITHOUT_CORRECT_TOOL;
+    @Deprecated
+    public final ConfigValue<Boolean> doBlocksDropWithoutCorrectTool = DO_BLOCKS_DROP_WITHOUT_CORRECT_TOOL;
+    @Deprecated
+    public final ConfigValue<Boolean> doInstantBreakBlocksDropWithoutCorrectTool = DO_INSTANT_BREAK_BLOCKS_DROP_WITHOUT_CORRECT_TOOL;
+    @Deprecated
+    public final ConfigValue<Boolean> doInstantBreakBlocksDamageKnives = DO_INSTANT_BREAK_BLOCKS_DAMAGE_KNIVES;
+    @Deprecated
+    public final ConfigValue<Float> flintKnappingConsumeChance = FLINT_KNAPPING_CONSUME_CHANCE;
+    @Deprecated
+    public final ConfigValue<Float> flintKnappingSuccessChance = FLINT_KNAPPING_SUCCESS_CHANCE;
+    @Deprecated
+    public final ConfigValue<Float> fireStarterFireStartChance = FIRE_STARTER_FIRE_START_CHANCE;
+    @Deprecated
+    public final ConfigValue<Boolean> fireStarterCanMakeCampfire = FIRE_STARTER_CAN_MAKE_CAMPFIRE;
+    @Deprecated
+    public final ConfigValue<Boolean> fireStarterCanMakeSoulCampfire = FIRE_STARTER_CAN_MAKE_SOUL_CAMPFIRE;
+    @Deprecated
+    public final ConfigValue<Boolean> largeVesselKeepsContentsWhenBroken = LARGE_VESSEL_KEEPS_CONTENTS_WHEN_BROKEN;
+    @Deprecated
+    public final ConfigValue<List<Block>> potteryBlockSequences = POTTERY_BLOCK_SEQUENCES;
 
     static 
     {
@@ -54,7 +86,11 @@ public enum Config
         });
     }
 
-    public void load()
+    private Config() {
+        // Private constructor for singleton pattern
+    }
+
+    public static void load()
     {
         // With Forge Config API, loading is handled automatically
         // This method is kept for compatibility with existing code

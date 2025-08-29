@@ -99,8 +99,8 @@ public class FireStarterItem extends TieredItem
                                 soulFireEntities.add(drop);
                             }
                         }
-                        final boolean canMakeCampfire = Config.INSTANCE.fireStarterCanMakeCampfire.getAsBoolean();
-                        final boolean canMakeSoulCampfire = Config.INSTANCE.fireStarterCanMakeSoulCampfire.getAsBoolean() && soulFire >= 1;
+                        final boolean canMakeCampfire = Config.FIRE_STARTER_CAN_MAKE_CAMPFIRE.get();
+                        final boolean canMakeSoulCampfire = Config.FIRE_STARTER_CAN_MAKE_SOUL_CAMPFIRE.get() && soulFire >= 1;
                         if (logs >= 1 && kindling >= 3 && (canMakeCampfire || canMakeSoulCampfire))
                         {
                             removeItems(logEntities, 1);
@@ -118,7 +118,7 @@ public class FireStarterItem extends TieredItem
                         else
                         {
                             // No fire pit to make, try light a fire
-                            if (level.getRandom().nextFloat() < Config.INSTANCE.fireStarterFireStartChance.getAsFloat())
+                            if (level.getRandom().nextFloat() < Config.FIRE_STARTER_FIRE_START_CHANCE.get())
                             {
                                 level.setBlockAndUpdate(pos.above(), Blocks.FIRE.defaultBlockState());
                             }

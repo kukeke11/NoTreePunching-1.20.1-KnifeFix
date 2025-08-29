@@ -61,7 +61,7 @@ public final class RecipeInjectionHandler
      */
     public static void injectRecipes(RecipeManager recipeManager, RegistryAccess registryAccess)
     {
-        if (!Config.INSTANCE.enableDynamicRecipeReplacement.getAsBoolean())
+        if (!Config.ENABLE_DYNAMIC_RECIPE_REPLACEMENT.get())
         {
             LOGGER.info("Dynamic recipe replacement is disabled in config");
             return;

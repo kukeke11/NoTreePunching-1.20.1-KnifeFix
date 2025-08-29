@@ -144,12 +144,12 @@ public final class HarvestBlockHandler
 
     public static boolean isUsingCorrectToolToMine(BlockState state, @Nullable BlockPos pos, Player player)
     {
-        return isUsingCorrectTool(state, pos, player, ModTags.Blocks.ALWAYS_BREAKABLE, () -> Config.INSTANCE.doBlocksMineWithoutCorrectTool.getAsBoolean(), () -> Config.INSTANCE.doInstantBreakBlocksMineWithoutCorrectTool.getAsBoolean(), true);
+        return isUsingCorrectTool(state, pos, player, ModTags.Blocks.ALWAYS_BREAKABLE, () -> Config.DO_BLOCKS_MINE_WITHOUT_CORRECT_TOOL.get(), () -> Config.DO_INSTANT_BREAK_BLOCKS_MINE_WITHOUT_CORRECT_TOOL.get(), true);
     }
 
     public static boolean isUsingCorrectToolForDrops(BlockState state, @Nullable BlockPos pos, Player player)
     {
-        return isUsingCorrectTool(state, pos, player, ModTags.Blocks.ALWAYS_DROPS, () -> Config.INSTANCE.doBlocksDropWithoutCorrectTool.getAsBoolean(), () -> Config.INSTANCE.doInstantBreakBlocksDropWithoutCorrectTool.getAsBoolean(), false);
+        return isUsingCorrectTool(state, pos, player, ModTags.Blocks.ALWAYS_DROPS, () -> Config.DO_BLOCKS_DROP_WITHOUT_CORRECT_TOOL.get(), () -> Config.DO_INSTANT_BREAK_BLOCKS_DROP_WITHOUT_CORRECT_TOOL.get(), false);
     }
 
     private static boolean isUsingCorrectTool(BlockState state, @Nullable BlockPos pos, Player player, TagKey<Block> alwaysAllowTag, Supplier<Boolean> withoutCorrectTool, BooleanSupplier instantBreakBlocksWithoutCorrectTool, boolean checkingCanMine)

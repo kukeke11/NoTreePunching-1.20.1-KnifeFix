@@ -102,7 +102,7 @@ public final class ToolDamageUtil
             // Special handling for knives - use config setting
             if (isKnife(stack))
             {
-                return Config.INSTANCE.doInstantBreakBlocksDamageKnives.getAsBoolean();
+                return Config.DO_INSTANT_BREAK_BLOCKS_DAMAGE_KNIVES.get();
             }
             
             // For other tools, generally don't damage on instant-break blocks
