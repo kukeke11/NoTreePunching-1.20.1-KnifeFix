@@ -58,8 +58,8 @@ public enum Config
     {
         // With Forge Config API, loading is handled automatically
         // This method is kept for compatibility with existing code
+        // Config is already registered during mod initialization, no need to register again
         LOGGER.info("NoTreePunching Config is managed by Forge Config API");
-        ForgeConfig.register();
     }
 
     /**
