@@ -1,0 +1,15 @@
+{
+  "__comment__": "This file was automatically created by mcresources",
+  "replace": false,
+  "values": [
+    "#notreepunching:h/knives",
+    {
+      "id": "#c:knives",
+      "required": false
+    },
+    {
+      "id": "#forge:tools/knives",
+      "required": false
+    }
+  ]
+}

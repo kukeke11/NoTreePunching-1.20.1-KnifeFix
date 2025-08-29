@@ -1,0 +1,15 @@
+{
+  "__comment__": "This file was automatically created by mcresources",
+  "replace": false,
+  "values": [
+    "minecraft:diamond",
+    {
+      "id": "#c:diamonds",
+      "required": false
+    },
+    {
+      "id": "#forge:ingots/diamond",
+      "required": false
+    }
+  ]
+}

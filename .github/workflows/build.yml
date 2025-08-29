@@ -1,0 +1,56 @@
+name: Manual Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-forge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Build (Forge)
+        working-directory: ./Forge
+        run: |
+          # Build (runs shadowJar + reobfShadowJar via assemble)
+            ./gradlew build --stacktrace --warning-mode=summary
+          echo
+          echo "Produced jars:"
+          ls -1 build/libs || true
+
+      - name: Prepare artifact (pick reobf shadow jar)
+        run: |
+          mkdir -p artifacts
+          # Prefer non-slim, non-sources, non-dev, forge shadow jar (no classifier) over slim one
+          JAR=$(ls -1 Forge/build/libs/*forge*.jar | grep -v '\-slim\.jar' | head -n1 || true)
+          if [ -z "$JAR" ]; then
+            echo "Fell back to slim jar (no non-slim jar present)"
+            JAR=$(ls -1 Forge/build/libs/*forge*-slim.jar | head -n1 || true)
+          fi
+          if [ -z "$JAR" ]; then
+            echo "ERROR: Could not find a forge jar to publish." >&2
+            ls -R Forge/build/libs || true
+            exit 1
+          fi
+          cp "$JAR" artifacts/notreepunching-forge.jar
+          # Also copy everything for debugging/reference
+          cp Forge/build/libs/* artifacts/ || true
+          echo "Selected jar: $JAR"
+          echo "Artifact contents:"
+          ls -1 artifacts
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: artifacts
+          if-no-files-found: error
+          retention-days: 7
