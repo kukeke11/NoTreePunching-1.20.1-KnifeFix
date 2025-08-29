@@ -19,6 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import com.alcatrazescapee.notreepunching.platform.XPlatform;
 import com.alcatrazescapee.notreepunching.util.Helpers;
+import com.alcatrazescapee.notreepunching.util.ToolDamageUtil;
 
 public abstract class ToolDamagingRecipe implements DelegateRecipe<CraftingContainer>, CraftingRecipe
 {
@@ -37,19 +38,40 @@ public abstract class ToolDamagingRecipe implements DelegateRecipe<CraftingConta
     public NonNullList<ItemStack> getRemainingItems(CraftingContainer container)
     {
         final NonNullList<ItemStack> items = NonNullList.withSize(container.getContainerSize(), ItemStack.EMPTY);
+        
         for (int i = 0; i < items.size(); i++)
         {
-            final ItemStack stack = container.getItem(i);
-            final ItemStack remainder = XPlatform.INSTANCE.getCraftingRemainder(stack);
-            if (!remainder.isEmpty())
+            try
             {
-                items.set(i, remainder);
+                final ItemStack stack = container.getItem(i);
+                if (stack.isEmpty()) continue;
+                
+                // Check for crafting remainder first (like buckets -> empty buckets)
+                final ItemStack remainder = XPlatform.INSTANCE.getCraftingRemainder(stack);
+                if (!remainder.isEmpty())
+                {
+                    items.set(i, remainder);
+                }
+                // Handle tool damage with proper validation
+                else if (stack.isDamageableItem() && (tool == null || tool.test(stack)))
+                {
+                    // Use the new centralized tool damage utility for safety
+                    ItemStack damagedStack = stack.copy();
+                    if (ToolDamageUtil.damageToolWithoutEntity(damagedStack, 1))
+                    {
+                        items.set(i, damagedStack);
+                    }
+                    // If tool broke, don't set any remainder (empty slot)
+                }
             }
-            else if (stack.isDamageableItem() && (tool == null || tool.test(stack)))
+            catch (Exception e)
             {
-                items.set(i, Helpers.hurtAndBreak(stack, 1).copy());
+                // Log error but continue processing other items
+                // This prevents one bad item from breaking the entire crafting result
+                continue;
             }
         }
+        
         return items;
     }
 

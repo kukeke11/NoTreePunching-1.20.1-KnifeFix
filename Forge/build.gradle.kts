@@ -11,7 +11,6 @@ val minecraftVersion: String by project        // e.g., 1.20.1
 val forgeVersion: String by project            // e.g., 47.4.0
 val parchmentVersion: String by project        // e.g., 2023.09.03
 val parchmentMinecraftVersion: String by project // e.g., 1.20.1
-val epsilonVersion: String by project
 
 base { archivesName.set("${modId}-forge-${minecraftVersion}") }
 
@@ -25,11 +24,6 @@ repositories {
 dependencies {
     // Forge userdev
     "minecraft"("net.minecraftforge:forge:$minecraftVersion-$forgeVersion")
-
-    // Epsilon dependency - using JarJar to shade into final jar
-    implementation(jarJar("com.alcatrazescapee:epsilon:$epsilonVersion") {
-        isTransitive = false
-    })
 
     // No project(":Common") — we inline the sources below
     if (System.getProperty("idea.sync.active") != "true") {
@@ -47,9 +41,6 @@ sourceSets {
 minecraft {
     // Correct order: date-first then MC version (e.g., 2023.09.03-1.20.1)
     mappings("parchment", "$parchmentVersion-$parchmentMinecraftVersion")
-
-    // Enable JarJar for shading dependencies into the final jar
-    enableJarJar()
 
     runs {
         create("client") {
@@ -103,14 +94,13 @@ tasks.processResources {
 }
 
 tasks.jar {
-    // Remove slim classifier to enable reobfJar task generation
-    // archiveClassifier.set("slim") - REMOVED
+    // Ensure single distributable jar output
+    archiveClassifier.set("")
 }
 
-// Ensure jar depends on jarJar and then reobfJar is properly generated
+// Clean jar task configuration - no JarJar dependencies
 afterEvaluate {
     tasks.named("jar") {
-        dependsOn("jarJar")
         finalizedBy("reobfJar")
     }
 }

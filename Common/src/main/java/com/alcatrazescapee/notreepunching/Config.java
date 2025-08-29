@@ -2,137 +2,129 @@ package com.alcatrazescapee.notreepunching;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+
 import com.mojang.logging.LogUtils;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.common.MinecraftForge;
 import org.slf4j.Logger;
 
-import com.alcatrazescapee.epsilon.EpsilonUtil;
-import com.alcatrazescapee.epsilon.ParseError;
-import com.alcatrazescapee.epsilon.Spec;
-import com.alcatrazescapee.epsilon.SpecBuilder;
-import com.alcatrazescapee.epsilon.Type;
-import com.alcatrazescapee.epsilon.value.BoolValue;
-import com.alcatrazescapee.epsilon.value.FloatValue;
-import com.alcatrazescapee.epsilon.value.TypeValue;
-import com.alcatrazescapee.notreepunching.common.blocks.ModBlocks;
-import com.alcatrazescapee.notreepunching.common.blocks.PotteryBlock;
 import com.alcatrazescapee.notreepunching.platform.XPlatform;
 
+/**
+ * Compatibility layer that maintains the same interface as the original Epsilon config
+ * while using Forge Config API under the hood.
+ */
 public enum Config
 {
     INSTANCE;
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public final BoolValue enableDynamicRecipeReplacement;
-    public final BoolValue enableLooseRocksWorldGen;
-    public final BoolValue doBlocksMineWithoutCorrectTool;
-    public final BoolValue doInstantBreakBlocksMineWithoutCorrectTool;
-    public final BoolValue doBlocksDropWithoutCorrectTool;
-    public final BoolValue doInstantBreakBlocksDropWithoutCorrectTool;
-    public final BoolValue doInstantBreakBlocksDamageKnives;
+    // Config value wrappers that maintain the original interface
+    public final ConfigValue<Boolean> enableDynamicRecipeReplacement = new ConfigValue<>(() -> ForgeConfig.enableDynamicRecipeReplacement.get());
+    public final ConfigValue<Boolean> enableLooseRocksWorldGen = new ConfigValue<>(() -> ForgeConfig.enableLooseRocksWorldGen.get());
+    public final ConfigValue<Boolean> doBlocksMineWithoutCorrectTool = new ConfigValue<>(() -> ForgeConfig.doBlocksMineWithoutCorrectTool.get());
+    public final ConfigValue<Boolean> doInstantBreakBlocksMineWithoutCorrectTool = new ConfigValue<>(() -> ForgeConfig.doInstantBreakBlocksMineWithoutCorrectTool.get());
+    public final ConfigValue<Boolean> doBlocksDropWithoutCorrectTool = new ConfigValue<>(() -> ForgeConfig.doBlocksDropWithoutCorrectTool.get());
+    public final ConfigValue<Boolean> doInstantBreakBlocksDropWithoutCorrectTool = new ConfigValue<>(() -> ForgeConfig.doInstantBreakBlocksDropWithoutCorrectTool.get());
+    public final ConfigValue<Boolean> doInstantBreakBlocksDamageKnives = new ConfigValue<>(() -> ForgeConfig.doInstantBreakBlocksDamageKnives.get());
 
-    public final FloatValue flintKnappingConsumeChance;
-    public final FloatValue flintKnappingSuccessChance;
-    public final FloatValue fireStarterFireStartChance;
-    public final BoolValue fireStarterCanMakeCampfire;
-    public final BoolValue fireStarterCanMakeSoulCampfire;
-    public final BoolValue largeVesselKeepsContentsWhenBroken;
-    public final TypeValue<List<Block>> potteryBlockSequences;
+    public final ConfigValue<Float> flintKnappingConsumeChance = new ConfigValue<>(() -> ForgeConfig.flintKnappingConsumeChance.get().floatValue());
+    public final ConfigValue<Float> flintKnappingSuccessChance = new ConfigValue<>(() -> ForgeConfig.flintKnappingSuccessChance.get().floatValue());
+    public final ConfigValue<Float> fireStarterFireStartChance = new ConfigValue<>(() -> ForgeConfig.fireStarterFireStartChance.get().floatValue());
+    public final ConfigValue<Boolean> fireStarterCanMakeCampfire = new ConfigValue<>(() -> ForgeConfig.fireStarterCanMakeCampfire.get());
+    public final ConfigValue<Boolean> fireStarterCanMakeSoulCampfire = new ConfigValue<>(() -> ForgeConfig.fireStarterCanMakeSoulCampfire.get());
+    public final ConfigValue<Boolean> largeVesselKeepsContentsWhenBroken = new ConfigValue<>(() -> ForgeConfig.largeVesselKeepsContentsWhenBroken.get());
+    public final ConfigValue<List<Block>> potteryBlockSequences = new ConfigValue<>(ForgeConfig::getPotteryBlockSequence);
 
-    private final Spec spec;
-
-    Config()
+    static 
     {
-        final SpecBuilder builder = Spec.builder();
-
-        enableDynamicRecipeReplacement = builder
-            .push("recipes")
-            .comment(
-                "Enables dynamic replacement of log -> plank recipes with variants that use a axe or saw.",
-                "These recipes are added dynamically and are not editable via datapacks. If this is disabled, no log -> plank recipes will be replaced!")
-            .define("enableDynamicRecipeReplacement", true);
-
-        enableLooseRocksWorldGen = builder
-            .swap("worldgen")
-            .comment("Enables loose rock world gen added automatically to biomes.")
-            .define("enableLooseRocksWorldGen", true);
-
-        doBlocksMineWithoutCorrectTool = builder
-            .swap("blockHarvesting")
-            .comment("If blocks are mineable without the correct tool.")
-            .define("doBlocksMineWithoutCorrectTool", false);
-        doBlocksDropWithoutCorrectTool = builder
-            .comment("If blocks drop their items without the correct tool.")
-            .define("doBlocksDropWithoutCorrectTool", false);
-
-        doInstantBreakBlocksDropWithoutCorrectTool = builder
-            .comment("If blocks that break instantly are mineable without the correct tool.")
-            .define("doInstantBreakBlocksDropWithoutCorrectTool", false);
-        doInstantBreakBlocksMineWithoutCorrectTool = builder
-            .comment("If blocks that break instantly drop their items without the correct tool.")
-            .define("doInstantBreakBlocksMineWithoutCorrectTool", true);
-
-        doInstantBreakBlocksDamageKnives = builder
-            .comment("If blocks such as tall grass which break instantly consume durability when broken with a knife (only affects No Tree Punching knives)")
-            .define("doInstantBreakBlocksDamageKnives", true);
-
-        flintKnappingConsumeChance = builder
-            .swap("balance")
-            .comment("The chance to consume a piece of flint when knapping")
-            .define("flintKnappingConsumeChance", 0.4f, 0f, 1f);
-        flintKnappingSuccessChance = builder
-            .comment("The chance to produce flint shards if a piece of flint has been consumed while knapping")
-            .define("flintKnappingSuccessChance", 0.7f, 0f, 1f);
-
-        fireStarterFireStartChance = builder
-            .comment("The chance for a fire starter to start fires")
-            .define("fireStarterFireStartChance", 0.3f, 0f, 1f);
-        fireStarterCanMakeCampfire = builder
-            .comment("If the fire starter can be used to make a campfire (with one '#notreepunching:fire_starter_logs' and three '#notreepunching:fire_starter_kindling'")
-            .define("fireStarterCanMakeCampfire", true);
-        fireStarterCanMakeSoulCampfire = builder
-            .comment("If the fire starter can be used to make a soul campfire (with one '#notreepunching:fire_starter_logs', three '#notreepunching:fire_starter_kindling', and one '#notreepunching:fire_starter_soul_fire_catalyst'")
-            .define("fireStarterCanMakeSoulCampfire", true);
-
-        largeVesselKeepsContentsWhenBroken = builder
-            .comment("If the large ceramic vessel block keeps it's contents when broken (as opposed to dropping them on the ground")
-            .define("largeVesselKeepsContentsWhenBroken", true);
-
-        potteryBlockSequences = builder
-            .comment(
-                "The sequence of blocks that can be created with the clay tool.",
-                "When the clay tool is used, if the block is present in this list, it may be converted to the next block in the list.",
-                "If the next block is minecraft:air, the block will be destroyed (the clay tool will never try and convert air into something)"
-            )
-            .define("potteryBlockSequences", List.of(
-                Blocks.CLAY,
-                ModBlocks.POTTERY.get(PotteryBlock.Variant.WORKED).get(),
-                ModBlocks.POTTERY.get(PotteryBlock.Variant.LARGE_VESSEL).get(),
-                ModBlocks.POTTERY.get(PotteryBlock.Variant.SMALL_VESSEL).get(),
-                ModBlocks.POTTERY.get(PotteryBlock.Variant.BUCKET).get(),
-                ModBlocks.POTTERY.get(PotteryBlock.Variant.FLOWER_POT).get(),
-                Blocks.AIR
-            ), Type.STRING_LIST.map(
-                list -> list.stream().map(name -> ParseError.requireNotNull(() -> BuiltInRegistries.BLOCK.getOptional(new ResourceLocation(name)).orElse(null), "Invalid block: '%s'".formatted(name))).toList(),
-                list -> list.stream().map(block -> BuiltInRegistries.BLOCK.getKey(block).toString()).toList(),
-                TypeValue::new
-            ));
-
-        spec = builder
-            .pop()
-            .build();
+        // Register config reload listener
+        MinecraftForge.EVENT_BUS.addListener((ModConfigEvent.Reloading event) -> {
+            if (NoTreePunching.MOD_ID.equals(event.getConfig().getModId()))
+            {
+                ForgeConfig.clearCache();
+                LOGGER.info("NoTreePunching config reloaded");
+            }
+        });
     }
 
     public void load()
     {
-        LOGGER.info("Loading NoTreePunching Config");
-        final Path path = XPlatform.INSTANCE.configPath();
-        EpsilonUtil.parse(INSTANCE.spec, Path.of(path.toString(), NoTreePunching.MOD_ID + ".toml"), LOGGER::warn);
-        LOGGER.info("Loaded NoTreePunching Config");
+        // With Forge Config API, loading is handled automatically
+        // This method is kept for compatibility with existing code
+        LOGGER.info("NoTreePunching Config is managed by Forge Config API");
+        ForgeConfig.register();
+    }
+
+    /**
+     * Functional interface for float suppliers to maintain original interface
+     */
+    @FunctionalInterface
+    public interface FloatSupplier
+    {
+        float getAsFloat();
+        
+        default boolean getAsBoolean()
+        {
+            return getAsFloat() != 0.0f;
+        }
+    }
+
+    /**
+     * Config value wrapper that maintains the original Epsilon interface
+     */
+    public static class ConfigValue<T>
+    {
+        private final Supplier<T> supplier;
+
+        public ConfigValue(Supplier<T> supplier)
+        {
+            this.supplier = supplier;
+        }
+
+        public T get()
+        {
+            return supplier.get();
+        }
+
+        public boolean getAsBoolean()
+        {
+            T value = get();
+            if (value instanceof Boolean bool)
+            {
+                return bool;
+            }
+            else if (value instanceof Number num)
+            {
+                return num.doubleValue() != 0.0;
+            }
+            return value != null;
+        }
+
+        public float getAsFloat()
+        {
+            T value = get();
+            if (value instanceof Number num)
+            {
+                return num.floatValue();
+            }
+            return 0.0f;
+        }
+
+        public double getAsDouble()
+        {
+            T value = get();
+            if (value instanceof Number num)
+            {
+                return num.doubleValue();
+            }
+            return 0.0;
+        }
     }
 }

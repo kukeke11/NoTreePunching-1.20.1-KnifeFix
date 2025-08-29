@@ -17,7 +17,6 @@ val forgeVersion: String by extra
 val forgeVersionRange: String by extra
 val parchmentVersion: String by extra
 val parchmentMinecraftVersion: String by extra
-val epsilonVersion: String by extra
 
 val modVersion: String = System.getenv("VERSION") ?: "0.0.0-indev"
 

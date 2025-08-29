@@ -36,6 +36,28 @@ public final class Helpers
         return new ResourceLocation(NoTreePunching.MOD_ID, path);
     }
 
+    /**
+     * Safe casting utility with proper type validation.
+     * Replaces the unsafe generic cast with proper error handling.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T safeCast(Object obj, Class<T> targetClass)
+    {
+        if (obj == null)
+        {
+            return null;
+        }
+        if (targetClass.isInstance(obj))
+        {
+            return (T) obj;
+        }
+        throw new ClassCastException("Cannot cast " + obj.getClass().getName() + " to " + targetClass.getName());
+    }
+
+    /**
+     * @deprecated Use {@link #safeCast(Object, Class)} instead for type safety
+     */
+    @Deprecated(forRemoval = true)
     @SuppressWarnings("unchecked")
     public static <T> T cast(Object o)
     {
