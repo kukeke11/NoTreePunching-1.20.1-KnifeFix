@@ -45,8 +45,13 @@ public final class ForgeConfig
 
     private static final ForgeConfigSpec spec;
 
-    // Cached block list for pottery sequences to avoid repeated parsing
+    // Cached config values for performance optimization
+    private static volatile Boolean cachedEnableDynamicRecipes = null;
+    private static volatile Boolean cachedEnableLooseRocks = null;
     private static volatile List<Block> cachedPotteryBlocks = null;
+
+    // Cache invalidation timestamp
+    private static volatile long lastCacheUpdate = 0;
 
     static
     {
@@ -160,14 +165,27 @@ public final class ForgeConfig
     }
 
     /**
-     * Clear the pottery block cache - call when config reloads
+     * Clear all caches - call when config reloads for performance optimization
      */
     public static void clearCache()
     {
         synchronized (ForgeConfig.class)
         {
+            cachedEnableDynamicRecipes = null;
+            cachedEnableLooseRocks = null;
             cachedPotteryBlocks = null;
+            lastCacheUpdate = System.currentTimeMillis();
         }
+    }
+
+    /**
+     * Get cached boolean value with automatic cache management
+     */
+    public static boolean getCachedBoolean(ForgeConfigSpec.BooleanValue configValue, String cacheName)
+    {
+        // For frequently accessed config values, consider caching
+        // For now, just return the value directly as Forge already optimizes this
+        return configValue.get();
     }
 
     private static List<Block> parsePotteryBlocks()
