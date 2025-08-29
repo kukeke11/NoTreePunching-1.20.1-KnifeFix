@@ -44,6 +44,11 @@ public class ModRecipes
     public static final RegistryHolder<RecipeSerializer<?>> EMPTY_SERIALIZER = RECIPE_SERIALIZERS.register("empty", () -> XPlatform.INSTANCE.recipeSerializer(EmptyRecipe.Serializer.INSTANCE));
     public static final RegistryHolder<RecipeType<?>> EMPTY_TYPE = RECIPE_TYPES.register("empty", () -> new RecipeType<>() {});
 
+    /**
+     * @deprecated Use {@link RecipeInjectionHandler#injectRecipes(RecipeManager, RegistryAccess)} instead.
+     * This method directly mutates RecipeManager internals unsafely and will be removed.
+     */
+    @Deprecated(forRemoval = true)
     public static void injectRecipes(ReloadableServerResources resources, RegistryAccess registryAccess)
     {
         if (!Config.INSTANCE.enableDynamicRecipeReplacement.getAsBoolean()) return;

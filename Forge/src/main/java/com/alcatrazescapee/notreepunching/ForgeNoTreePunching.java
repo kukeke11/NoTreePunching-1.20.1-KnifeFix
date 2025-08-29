@@ -22,6 +22,9 @@ public final class ForgeNoTreePunching
 {
     public ForgeNoTreePunching()
     {
+        // Initialize Forge config system
+        ForgeConfig.register();
+        
         NoTreePunching.earlySetup();
         FMLJavaModLoadingContext.get().getModEventBus().addListener((FMLCommonSetupEvent event) -> event.enqueueWork(NoTreePunching::lateSetup));
 

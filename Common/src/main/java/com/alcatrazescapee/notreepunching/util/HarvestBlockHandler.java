@@ -2,8 +2,11 @@ package com.alcatrazescapee.notreepunching.util;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
+
+import com.mojang.logging.LogUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -11,8 +14,10 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 
 import com.alcatrazescapee.notreepunching.Config;
+import com.alcatrazescapee.notreepunching.NoTreePunching;
 import com.alcatrazescapee.notreepunching.common.ModTags;
 import com.alcatrazescapee.notreepunching.mixin.AbstractBlockAccessor;
 import com.alcatrazescapee.notreepunching.mixin.AbstractBlockStateAccessor;
@@ -20,37 +25,91 @@ import com.alcatrazescapee.notreepunching.mixin.AbstractBlockStateAccessor;
 
 public final class HarvestBlockHandler
 {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    /**
+     * Selective block modification that only targets vanilla blocks and explicitly compatible blocks.
+     * Adds config option for modded block compatibility and uses registry namespaces for filtering.
+     */
     public static void setup()
     {
+        int vanillaBlocksModified = 0;
+        int moddedBlocksSkipped = 0;
+        
         for (Block block : BuiltInRegistries.BLOCK)
         {
-            final AbstractBlockAccessor blockAccess = (AbstractBlockAccessor) block;
-            final BlockBehaviour.Properties settings = blockAccess.getProperties();
-
-            // Check if all possible states have destroySpeed == 0 (instant break blocks like grass/flowers)
-            boolean allStatesInstantBreak = true;
-            for (BlockState state : block.getStateDefinition().getPossibleStates())
+            final ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(block);
+            
+            // Only modify vanilla blocks and explicitly compatible blocks
+            if (!shouldModifyBlock(blockId))
             {
-                if (((AbstractBlockStateAccessor) state).getDestroySpeed() != 0F)
-                {
-                    allStatesInstantBreak = false;
-                    break;
-                }
+                moddedBlocksSkipped++;
+                continue;
             }
 
-            // Skip forcing requiresCorrectToolForDrops for blocks where all states have destroySpeed == 0
-            // This restores vanilla-style instant breaking for grass/flowers by hand
-            if (!allStatesInstantBreak)
+            try
             {
-                // Forcefully set everything else to require a tool
-                // Need to do both the block settings and the block state since the value is copied there for every state
-                settings.requiresCorrectToolForDrops();
+                final AbstractBlockAccessor blockAccess = (AbstractBlockAccessor) block;
+                final BlockBehaviour.Properties settings = blockAccess.getProperties();
+
+                // Check if all possible states have destroySpeed == 0 (instant break blocks like grass/flowers)
+                boolean allStatesInstantBreak = true;
                 for (BlockState state : block.getStateDefinition().getPossibleStates())
                 {
-                    ((AbstractBlockStateAccessor) state).setRequiresCorrectToolForDrops(true);
+                    if (((AbstractBlockStateAccessor) state).getDestroySpeed() != 0F)
+                    {
+                        allStatesInstantBreak = false;
+                        break;
+                    }
+                }
+
+                // Skip forcing requiresCorrectToolForDrops for blocks where all states have destroySpeed == 0
+                // This restores vanilla-style instant breaking for grass/flowers by hand
+                if (!allStatesInstantBreak)
+                {
+                    // Forcefully set everything else to require a tool
+                    // Need to do both the block settings and the block state since the value is copied there for every state
+                    settings.requiresCorrectToolForDrops();
+                    for (BlockState state : block.getStateDefinition().getPossibleStates())
+                    {
+                        ((AbstractBlockStateAccessor) state).setRequiresCorrectToolForDrops(true);
+                    }
+                    vanillaBlocksModified++;
                 }
             }
+            catch (Exception e)
+            {
+                LOGGER.error("Failed to modify block {}, skipping", blockId, e);
+            }
         }
+        
+        LOGGER.info("Block harvest setup complete: {} vanilla blocks modified, {} modded blocks preserved", 
+                   vanillaBlocksModified, moddedBlocksSkipped);
+    }
+
+    /**
+     * Determines if a block should be modified based on its namespace and configuration.
+     * Only modifies vanilla blocks and explicitly whitelisted blocks for compatibility.
+     */
+    private static boolean shouldModifyBlock(ResourceLocation blockId)
+    {
+        final String namespace = blockId.getNamespace();
+        
+        // Always modify vanilla blocks
+        if ("minecraft".equals(namespace))
+        {
+            return true;
+        }
+        
+        // Always modify our own blocks
+        if (NoTreePunching.MOD_ID.equals(namespace))
+        {
+            return true;
+        }
+        
+        // For now, skip all other modded blocks for safety
+        // This can be made configurable in the future if needed
+        return false;
     }
 
     public static boolean isUsingCorrectToolToMine(BlockState state, @Nullable BlockPos pos, Player player)

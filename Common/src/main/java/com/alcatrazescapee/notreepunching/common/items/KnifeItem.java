@@ -18,6 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import com.alcatrazescapee.notreepunching.Config;
 import com.alcatrazescapee.notreepunching.platform.Platform;
 import com.alcatrazescapee.notreepunching.platform.PlatformOverride;
+import com.alcatrazescapee.notreepunching.util.ToolDamageUtil;
 
 public class KnifeItem extends SwordItem
 {
@@ -35,9 +36,14 @@ public class KnifeItem extends SwordItem
     @Override
     public boolean mineBlock(ItemStack stack, Level level, BlockState state, BlockPos pos, LivingEntity entity)
     {
-        if (!level.isClientSide && (state.getDestroySpeed(level, pos) != 0.0F || Config.INSTANCE.doInstantBreakBlocksDamageKnives.getAsBoolean()))
+        if (!level.isClientSide)
         {
-            stack.hurtAndBreak(1, entity, entityIn -> entityIn.broadcastBreakEvent(EquipmentSlot.MAINHAND));
+            final boolean shouldDamage = ToolDamageUtil.shouldDamageToolOnBlock(stack, level, state, pos);
+            if (shouldDamage)
+            {
+                final int damageAmount = ToolDamageUtil.calculateToolDamage(stack, ToolDamageUtil.ToolUsage.BLOCK_MINING);
+                ToolDamageUtil.damageToolSafely(stack, entity, damageAmount, InteractionHand.MAIN_HAND);
+            }
         }
         return true;
     }
