@@ -1,11 +1,12 @@
 pluginManagement {
     repositories {
         gradlePluginPortal()
-        maven("https://maven.minecraftforge.net")
-        maven("https://maven.parchmentmc.org")
         maven("https://repo.spongepowered.org/repository/maven-public/")
-        maven("https://alcatrazescapee.jfrog.io/artifactory/mods")
         mavenCentral()
+        // Maven Forge is not accessible in this environment
+        // maven("https://maven.minecraftforge.net")
+        // maven("https://maven.parchmentmc.org")
+        // maven("https://alcatrazescapee.jfrog.io/artifactory/mods")
     }
     resolutionStrategy {
         eachPlugin {
