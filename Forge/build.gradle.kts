@@ -1,11 +1,9 @@
 plugins {
     java
     idea
-    id("net.minecraftforge.gradle") version "6.+"
+    id("net.minecraftforge.gradle") version "6.0.21"
     id("org.spongepowered.mixin") version "0.7-SNAPSHOT"
     id("org.parchmentmc.librarian.forgegradle") version "1.+"
-    // Keep Shadow only if you actually shade something:
-    // id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 val modId: String by project
@@ -28,10 +26,10 @@ dependencies {
     // Forge userdev
     "minecraft"("net.minecraftforge:forge:$minecraftVersion-$forgeVersion")
 
-    // Epsilon on dev classpath, not bundled
-    "minecraftLibrary"("com.alcatrazescapee:epsilon:$epsilonVersion") {
+    // Epsilon dependency - using JarJar to shade into final jar
+    implementation(jarJar("com.alcatrazescapee:epsilon:$epsilonVersion") {
         isTransitive = false
-    }
+    })
 
     // No project(":Common") — we inline the sources below
     if (System.getProperty("idea.sync.active") != "true") {
@@ -49,6 +47,9 @@ sourceSets {
 minecraft {
     // Correct order: date-first then MC version (e.g., 2023.09.03-1.20.1)
     mappings("parchment", "$parchmentVersion-$parchmentMinecraftVersion")
+
+    // Enable JarJar for shading dependencies into the final jar
+    enableJarJar()
 
     runs {
         create("client") {
@@ -102,9 +103,16 @@ tasks.processResources {
 }
 
 tasks.jar {
-    // keep your reobf flow
-    archiveClassifier.set("slim")
-    finalizedBy("reobfJar")
+    // Remove slim classifier to enable reobfJar task generation
+    // archiveClassifier.set("slim") - REMOVED
+}
+
+// Ensure jar depends on jarJar and then reobfJar is properly generated
+afterEvaluate {
+    tasks.named("jar") {
+        dependsOn("jarJar")
+        finalizedBy("reobfJar")
+    }
 }
 
 tasks.withType<JavaCompile> {
