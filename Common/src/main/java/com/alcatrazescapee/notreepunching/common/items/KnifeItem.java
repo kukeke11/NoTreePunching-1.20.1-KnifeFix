@@ -1,6 +1,7 @@
 package com.alcatrazescapee.notreepunching.common.items;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -31,6 +32,50 @@ public class KnifeItem extends SwordItem
     public boolean canApplyAtEnchantingTable(ItemStack stack, Enchantment enchantment)
     {
         return enchantment.category == EnchantmentCategory.BREAKABLE || enchantment.category == EnchantmentCategory.WEAPON;
+    }
+
+    /**
+     * Override to make knives effective against plant-type blocks.
+     * This allows knives to be recognized as the correct tool for harvesting plants.
+     */
+    @Override
+    public boolean isCorrectToolForDrops(ItemStack stack, BlockState state)
+    {
+        // Check if it's a plant-type block that knives should be able to harvest
+        if (isPlantBlock(state))
+        {
+            return true;
+        }
+        
+        // Fall back to parent behavior for other blocks
+        return super.isCorrectToolForDrops(stack, state);
+    }
+
+    /**
+     * Override to provide faster destroy speed for plant blocks.
+     * This ensures knives harvest plants efficiently.
+     */
+    @Override
+    public float getDestroySpeed(ItemStack stack, BlockState state)
+    {
+        // For plant blocks, provide fast destroy speed (similar to shears on leaves)
+        if (isPlantBlock(state))
+        {
+            return 15.0f; // Fast but not instant
+        }
+        
+        // Fall back to parent behavior for other blocks
+        return super.getDestroySpeed(stack, state);
+    }
+
+    /**
+     * Helper method to identify plant-type blocks that knives should be effective against.
+     * Uses Minecraft's built-in SWORD_EFFICIENT tag which already includes grass and other plants.
+     */
+    private boolean isPlantBlock(BlockState state)
+    {
+        // Use Minecraft's built-in SWORD_EFFICIENT tag which already includes grass, wild grass, and other plants
+        return state.is(BlockTags.SWORD_EFFICIENT);
     }
 
     @Override

@@ -217,6 +217,9 @@ def do_tags(forge: ResourceManager, fabric: ResourceManager, common: ResourceMan
     common.item_tag('shovel_tools', '#notreepunching:mattocks')
     common.item_tag('hoe_tools', '#notreepunching:mattocks')
     common.item_tag('sharp_tools', '#notreepunching:knives')
+    
+    # Ensure plant blocks are included in sword_efficient for knife compatibility
+    common.block_tag('minecraft:sword_efficient', '#minecraft:flowers', '#minecraft:small_flowers', 'minecraft:grass', 'minecraft:tall_grass', 'minecraft:fern', 'minecraft:large_fern', 'minecraft:dead_bush', 'minecraft:seagrass', 'minecraft:tall_seagrass', '#minecraft:crops', '#minecraft:saplings')
 
     # Add plant fiber sources block tag for future extensibility
     common.block_tag('plant_fiber_sources', 'minecraft:grass', 'minecraft:tall_grass')
