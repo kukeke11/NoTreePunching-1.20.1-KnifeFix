@@ -6,104 +6,117 @@
 **Key Technologies:** Java 17, Minecraft Forge 47.4.0, Gradle 8.1.1, Parchment mappings, Mixin framework
 **Project Size:** ~84 Java files, multi-module architecture (Common + Forge)
 
-## Critical Build Instructions
+## Build Instructions
 
 ### Prerequisites & Environment Setup
-**Required:** Java 17 (OpenJDK Temurin recommended), Git
+**Required:** Java 17 (OpenJDK Temurin recommended), Git, Internet connection
 **Always verify Java version first:** `java --version` (must show Java 17)
 
-### Build Commands (Execute in Project Root)
-**CRITICAL: Always run commands from repository root, not from submodules**
+### Primary Build Method (Recommended - TESTED)
+**Execute from repository root:**
 
-**Standard build sequence:**
 ```bash
-# Clean and refresh dependencies (required for initial setup)
-./gradlew --refresh-dependencies clean
+# 1. Clean previous build artifacts
+./gradlew clean
 
-# Build with memory optimization (REQUIRED for ForgeGradle reliability)
-export GRADLE_OPTS="-Xmx4G -Xms1G"
-./gradlew --refresh-dependencies build --no-daemon
+# 2. Build the Forge module (includes all dependencies)
+./gradlew Forge:build
 
-# Development client (required test after Java code changes)
-# NOTE: Fails in CI environments due to display requirements
-./gradlew :Forge:runClient
-
-# Development server
-./gradlew :Forge:runServer
-```
-
-### Build Timing & Common Issues
-- **Initial setup:** 2-5 minutes (downloads dependencies, requires cache clearing)
-- **Regular builds:** 30-60 seconds (with proper memory settings)  
-- **runClient startup:** 1-2 minutes (loads Minecraft, fails in CI/headless environments)
-
-**ForgeGradle Build Issues (TESTED SOLUTIONS):**
-1. **REQUIRED for initial setup and build failures:**
-   ```bash
-   # Clear ForgeGradle caches and refresh (MANDATORY first step)
-   rm -rf ~/.gradle/caches/forge_gradle
-   rm -rf ~/.gradle/caches/minecraft
-   ./gradlew --refresh-dependencies clean
-   
-   # ALWAYS use memory optimization for reliable builds
-   export GRADLE_OPTS="-Xmx4G -Xms1G" 
-   ./gradlew --refresh-dependencies build --no-daemon
-   ```
-
-2. **If build still fails after cache clearing:**
-   ```bash
-   # Full cache purge and retry
-   rm -rf ~/.gradle/caches/
-   export GRADLE_OPTS="-Xmx4G -Xms1G"
-   ./gradlew --refresh-dependencies build --no-daemon --stacktrace
-   ```
-
-**First-time setup REQUIRES cache clearing and memory optimization** - ForgeGradle has complex dependency resolution that often fails without proper setup.
-
-**Environment Dependencies:**
-- **Local development:** Requires cache clearing and memory opts for initial setup  
-- **CI environments:** Build success requires memory configuration; runClient fails (no display)
-- **Build verification:** Use GitHub Actions workflow for reliable builds: `.github/workflows/build.yml`
-
-**Working build verification (TESTED):**
-```bash
-# For environments where runClient fails (CI/headless)
-export GRADLE_OPTS="-Xmx4G -Xms1G"
-./gradlew --refresh-dependencies build --no-daemon
-
-# Check artifacts were created
-ls -la Forge/build/libs/
-```
-
-### Validation Requirements
-**After any Java code changes, ALWAYS run (TESTED):**
-```bash
-# Critical test - must complete without crashes  
-# NOTE: WILL FAIL in CI/headless environments due to graphics initialization
-./gradlew :Forge:runClient
-```
-- Must load to main menu without crashes (local development only)
-- Check console for mod loading errors during startup
-- Required even for minor changes in local environments
-- **Graphics Error Expected in CI:** "glfwInit failed" - this is normal and expected
-
-**Alternative validation for CI environments (TESTED):**
-```bash
-# Compile-only validation when runClient unavailable
-./gradlew :Forge:compileJava
-./gradlew :Forge:processResources
-
-# Or comprehensive build verification
-export GRADLE_OPTS="-Xmx4G -Xms1G"
-./gradlew --refresh-dependencies build --no-daemon
-```
-
-**Build artifact verification (TESTED):**
-```bash
-# Check successful build output
+# 3. Verify build artifacts created
 ls -la Forge/build/libs/
 # Should contain: notreepunching-forge-{version}.jar
 ```
+
+**Build timing:** 3-5 minutes for initial setup, 1-2 minutes for subsequent builds
+
+### Alternative Build Commands
+```bash
+# Compile Java sources only
+./gradlew Forge:compileJava
+
+# Process resources and metadata  
+./gradlew Forge:processResources
+
+# Create mod jar file
+./gradlew Forge:jar
+
+# Full build with all checks
+./gradlew Forge:build
+```
+
+### Troubleshooting Failed Builds
+**If the primary method fails, use this advanced approach:**
+
+1. **Clear ForgeGradle caches:**
+   ```bash
+   rm -rf ~/.gradle/caches/forge_gradle
+   rm -rf ~/.gradle/caches/minecraft
+   ./gradlew clean
+   ```
+
+2. **Build with memory optimization:**
+   ```bash
+   export GRADLE_OPTS="-Xmx4G -Xms1G"
+   ./gradlew --refresh-dependencies build --no-daemon
+   ```
+
+3. **If still failing, full cache purge:**
+   ```bash
+   rm -rf ~/.gradle/caches/
+   export GRADLE_OPTS="-Xmx4G -Xms1G"  
+   ./gradlew --refresh-dependencies build --no-daemon --stacktrace
+   ```
+
+### Memory Configuration
+**Option 1:** Export in shell (temporary)
+```bash
+export GRADLE_OPTS="-Xmx4G -Xms1G"
+```
+
+**Option 2:** Configure in `gradle.properties` (persistent)
+```properties
+org.gradle.jvmargs=-Xmx4G -Xms1G
+org.gradle.daemon=true
+```
+
+### Development Tasks & Validation
+
+**Development client/server:**
+```bash
+# Launch Minecraft client with mod loaded (for testing)
+./gradlew Forge:runClient
+
+# Launch Minecraft server with mod loaded
+./gradlew Forge:runServer
+```
+
+### Critical Validation After Java Changes
+**After any Java code changes, ALWAYS run:**
+```bash
+./gradlew Forge:runClient
+```
+- Must load to main menu without crashes (local development)
+- Check console for mod loading errors during startup
+- Required even for minor changes to verify mod loads correctly
+
+**Expected behavior in different environments:**
+- **Local development:** Should launch Minecraft successfully
+- **CI/headless environments:** Will fail with "glfwInit failed" - this is normal and expected
+
+**Alternative validation for CI/headless environments:**
+```bash
+# Compile-only validation
+./gradlew Forge:compileJava
+./gradlew Forge:processResources
+
+# Or run full build to verify everything works
+./gradlew Forge:build
+```
+
+### Build Warnings (Safe to Ignore)
+- `[removal]` warnings about deprecated Forge APIs - planned migration items
+- `MixinGradle is skipping eclipse integration` - IDE integration warning  
+- `[Fatal Error] client-1.20.1.pom:2:10: Already seen doctype` - Maven parsing issue
 
 ## Project Architecture & Layout
 
