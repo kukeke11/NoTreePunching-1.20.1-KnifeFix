@@ -14,8 +14,6 @@ import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentCategory;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 import com.alcatrazescapee.notreepunching.Config;
@@ -72,23 +70,12 @@ public class KnifeItem extends SwordItem
 
     /**
      * Helper method to identify plant-type blocks that knives should be effective against.
+     * Uses Minecraft's built-in SWORD_EFFICIENT tag which already includes grass and other plants.
      */
     private boolean isPlantBlock(BlockState state)
     {
-        Block block = state.getBlock();
-        
-        // Check for common plant blocks
-        return state.is(BlockTags.FLOWERS) ||
-               state.is(BlockTags.SMALL_FLOWERS) ||
-               block == Blocks.GRASS ||
-               block == Blocks.TALL_GRASS ||
-               block == Blocks.FERN ||
-               block == Blocks.LARGE_FERN ||
-               block == Blocks.DEAD_BUSH ||
-               block == Blocks.SEAGRASS ||
-               block == Blocks.TALL_SEAGRASS ||
-               state.is(BlockTags.CROPS) ||
-               state.is(BlockTags.SAPLINGS);
+        // Use Minecraft's built-in SWORD_EFFICIENT tag which already includes grass, wild grass, and other plants
+        return state.is(BlockTags.SWORD_EFFICIENT);
     }
 
     @Override
