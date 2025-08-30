@@ -98,7 +98,6 @@ public final class HarvestBlockHandler
             ((AbstractBlockStateAccessor) state).setRequiresCorrectToolForDrops(true);
         }
         return true;
-        return false;
     }
 
     /**
