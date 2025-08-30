@@ -90,30 +90,14 @@ public final class HarvestBlockHandler
         final AbstractBlockAccessor blockAccess = (AbstractBlockAccessor) block;
         final BlockBehaviour.Properties settings = blockAccess.getProperties();
 
-        // Check if all possible states have destroySpeed == 0 (instant break blocks like grass/flowers)
-        boolean allStatesInstantBreak = true;
+        // Force ALL blocks to require correct tools, including instant-break blocks like grass/flowers
+        // This fixes the backwards logic where instant-break blocks were exempted
+        settings.requiresCorrectToolForDrops();
         for (BlockState state : block.getStateDefinition().getPossibleStates())
         {
-            if (((AbstractBlockStateAccessor) state).getDestroySpeed() != 0F)
-            {
-                allStatesInstantBreak = false;
-                break;
-            }
+            ((AbstractBlockStateAccessor) state).setRequiresCorrectToolForDrops(true);
         }
-
-        // Skip forcing requiresCorrectToolForDrops for blocks where all states have destroySpeed == 0
-        // This restores vanilla-style instant breaking for grass/flowers by hand
-        if (!allStatesInstantBreak)
-        {
-            // Forcefully set everything else to require a tool
-            // Need to do both the block settings and the block state since the value is copied there for every state
-            settings.requiresCorrectToolForDrops();
-            for (BlockState state : block.getStateDefinition().getPossibleStates())
-            {
-                ((AbstractBlockStateAccessor) state).setRequiresCorrectToolForDrops(true);
-            }
-            return true;
-        }
+        return true;
         return false;
     }
 
