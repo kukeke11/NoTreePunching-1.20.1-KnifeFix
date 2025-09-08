@@ -1,7 +1,6 @@
 package com.alcatrazescapee.notreepunching.common.items;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -19,6 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import com.alcatrazescapee.notreepunching.Config;
 import com.alcatrazescapee.notreepunching.platform.Platform;
 import com.alcatrazescapee.notreepunching.platform.PlatformOverride;
+import com.alcatrazescapee.notreepunching.util.SharpToolUtil;
 import com.alcatrazescapee.notreepunching.util.ToolDamageUtil;
 
 public class KnifeItem extends SwordItem
@@ -37,12 +37,13 @@ public class KnifeItem extends SwordItem
     /**
      * Override to make knives effective against plant-type blocks.
      * This allows knives to be recognized as the correct tool for harvesting plants.
+     * Now delegates to SharpToolUtil for tag-based detection while preserving exact behavior.
      */
     @Override
     public boolean isCorrectToolForDrops(ItemStack stack, BlockState state)
     {
-        // Check if it's a plant-type block that knives should be able to harvest
-        if (isPlantBlock(state))
+        // Use the new sharp tool system - knives are included in the sharp_tools tag
+        if (SharpToolUtil.isSharpTool(stack) && SharpToolUtil.requiresSharpTool(state))
         {
             return true;
         }
@@ -54,28 +55,20 @@ public class KnifeItem extends SwordItem
     /**
      * Override to provide faster destroy speed for plant blocks.
      * This ensures knives harvest plants efficiently.
+     * Now delegates to SharpToolUtil for tag-based speed calculation.
      */
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state)
     {
-        // For plant blocks, provide fast destroy speed (similar to shears on leaves)
-        if (isPlantBlock(state))
+        // Use the new sharp tool system for destroy speed calculation
+        float sharpToolSpeed = SharpToolUtil.getDestroySpeed(stack, state);
+        if (sharpToolSpeed > 1.0f)
         {
-            return 15.0f; // Fast but not instant
+            return sharpToolSpeed; // Returns 15.0f for sharp tools on applicable blocks
         }
         
         // Fall back to parent behavior for other blocks
         return super.getDestroySpeed(stack, state);
-    }
-
-    /**
-     * Helper method to identify plant-type blocks that knives should be effective against.
-     * Uses Minecraft's built-in SWORD_EFFICIENT tag which already includes grass and other plants.
-     */
-    private boolean isPlantBlock(BlockState state)
-    {
-        // Use Minecraft's built-in SWORD_EFFICIENT tag which already includes grass, wild grass, and other plants
-        return state.is(BlockTags.SWORD_EFFICIENT);
     }
 
     @Override
@@ -83,6 +76,7 @@ public class KnifeItem extends SwordItem
     {
         if (!level.isClientSide)
         {
+            // Use existing ToolDamageUtil for damage calculation - preserves all existing logic
             final boolean shouldDamage = ToolDamageUtil.shouldDamageToolOnBlock(stack, level, state, pos);
             if (shouldDamage)
             {
