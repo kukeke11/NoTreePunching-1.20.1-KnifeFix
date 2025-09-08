@@ -1,5 +1,6 @@
 package com.alcatrazescapee.notreepunching.util;
 
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -62,7 +63,8 @@ public final class SharpToolUtil
         
         // Use state-based checking to be more accurate (not cached by block since states can vary)
         return state.is(ModTags.Blocks.REQUIRES_SHARP_TOOL) || 
-               state.is(ModTags.Blocks.PLANT_FIBER_SOURCES);
+               state.is(ModTags.Blocks.PLANT_FIBER_SOURCES) ||
+               state.is(BlockTags.SWORD_EFFICIENT);
     }
     
     /**
