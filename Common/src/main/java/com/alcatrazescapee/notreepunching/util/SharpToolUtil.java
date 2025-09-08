@@ -29,13 +29,19 @@ public final class SharpToolUtil
     /**
      * Check if an ItemStack is a sharp tool capable of harvesting plants
      * @param stack The item stack to check
-     * @return true if the item is tagged as a sharp tool
+     * @return true if the item is tagged as a sharp tool and the system is enabled
      */
     public static boolean isSharpTool(ItemStack stack)
     {
         if (stack.isEmpty())
         {
             return false;
+        }
+        
+        // Check if sharp tool system is enabled
+        if (!Config.INSTANCE.enableSharpToolSystem.getAsBoolean())
+        {
+            return false; // System disabled, no items are considered sharp tools
         }
         
         return SHARP_TOOL_CACHE.computeIfAbsent(stack.getItem(), item -> 
@@ -46,10 +52,16 @@ public final class SharpToolUtil
     /**
      * Check if a block requires a sharp tool for drops
      * @param state The block state to check
-     * @return true if the block requires a sharp tool for item drops
+     * @return true if the block requires a sharp tool for item drops and the requirement is enabled
      */
     public static boolean requiresSharpTool(BlockState state)
     {
+        // Check if sharp tool requirement is enabled
+        if (!Config.INSTANCE.requireSharpToolForPlants.getAsBoolean())
+        {
+            return false; // Requirement disabled, no blocks require sharp tools
+        }
+        
         return PLANT_BLOCK_CACHE.computeIfAbsent(state.getBlock(), block ->
             state.is(ModTags.Blocks.REQUIRES_SHARP_TOOL) || 
             state.is(BlockTags.SWORD_EFFICIENT) ||
@@ -61,7 +73,7 @@ public final class SharpToolUtil
      * Get destroy speed for sharp tools on applicable blocks
      * @param stack The item stack being used
      * @param state The block state being broken
-     * @return The destroy speed (15.0f for sharp tools on applicable blocks, 1.0f otherwise)
+     * @return The destroy speed (15.0f for sharp tools on applicable blocks when system is enabled, 1.0f otherwise)
      */
     public static float getDestroySpeed(ItemStack stack, BlockState state)
     {
@@ -76,7 +88,7 @@ public final class SharpToolUtil
      * Check if tool should take damage when mining a plant block
      * @param stack The item stack being used
      * @param state The block state being mined
-     * @return true if the tool should take damage
+     * @return true if the tool should take damage (respects configuration settings)
      */
     public static boolean shouldDamageToolOnPlant(ItemStack stack, BlockState state)
     {
@@ -93,6 +105,16 @@ public final class SharpToolUtil
         SHARP_TOOL_CACHE.clear();
         PLANT_BLOCK_CACHE.clear();
         LOGGER.debug("Sharp tool caches cleared");
+    }
+    
+    /**
+     * Clear caches when configuration changes to ensure new settings take effect
+     * This should be called from config reload events
+     */
+    public static void onConfigReload()
+    {
+        clearCache();
+        LOGGER.info("Sharp tool system configuration reloaded");
     }
     
     private SharpToolUtil()

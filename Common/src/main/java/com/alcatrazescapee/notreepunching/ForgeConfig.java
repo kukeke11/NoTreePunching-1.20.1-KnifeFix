@@ -42,6 +42,10 @@ public final class ForgeConfig
     public static final ForgeConfigSpec.BooleanValue fireStarterCanMakeSoulCampfire;
     public static final ForgeConfigSpec.BooleanValue largeVesselKeepsContentsWhenBroken;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> potteryBlockSequences;
+    
+    // Sharp tool system config values
+    public static final ForgeConfigSpec.BooleanValue enableSharpToolSystem;
+    public static final ForgeConfigSpec.BooleanValue requireSharpToolForPlants;
 
     private static final ForgeConfigSpec spec;
 
@@ -128,6 +132,24 @@ public final class ForgeConfig
                 "notreepunching:pottery_flower_pot",
                 "minecraft:air"
             ));
+
+        // Sharp tool system section
+        builder.pop().push("sharpTools");
+        enableSharpToolSystem = builder
+            .comment(
+                "Enables the tag-based sharp tool system for plant harvesting.",
+                "When enabled, any item tagged with '#notreepunching:sharp_tools' can harvest plants that require sharp tools.",
+                "When disabled, falls back to vanilla behavior for all tools except NTP knives (which use their original logic)."
+            )
+            .define("enableSharpToolSystem", true);
+        
+        requireSharpToolForPlants = builder
+            .comment(
+                "If plants require sharp tools for item drops.",
+                "When enabled, plants tagged with '#notreepunching:requires_sharp_tool' will only drop items when harvested with sharp tools.",
+                "When disabled, plants drop items when harvested with any tool or by hand."
+            )
+            .define("requireSharpToolForPlants", true);
 
         builder.pop();
         spec = builder.build();

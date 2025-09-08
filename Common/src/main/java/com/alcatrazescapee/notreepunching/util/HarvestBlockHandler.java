@@ -23,6 +23,7 @@ import com.alcatrazescapee.notreepunching.NoTreePunching;
 import com.alcatrazescapee.notreepunching.common.ModTags;
 import com.alcatrazescapee.notreepunching.mixin.AbstractBlockAccessor;
 import com.alcatrazescapee.notreepunching.mixin.AbstractBlockStateAccessor;
+import com.alcatrazescapee.notreepunching.util.SharpToolUtil;
 
 
 public final class HarvestBlockHandler
@@ -176,9 +177,22 @@ public final class HarvestBlockHandler
             return true; // Tool has already reported itself as the correct tool. This includes a tier check in vanilla.
         }
 
+        // Check if this is a sharp tool being used on a plant that requires sharp tools
+        // This extends sharp tool functionality to any item tagged as sharp_tools, not just knives
+        if (SharpToolUtil.isSharpTool(stack) && SharpToolUtil.requiresSharpTool(state))
+        {
+            return true; // Sharp tool can harvest plants that require sharp tools
+        }
+
         if (checkingCanMine && stack.getDestroySpeed(state) > 1.0f)
         {
             return true; // Tool reported itself as harvesting faster than normal, in which case when checking if we can *mine* the block, we return true.
+        }
+
+        // For mining checks, also allow sharp tools on plant blocks to have fast break speed
+        if (checkingCanMine && SharpToolUtil.isSharpTool(stack) && SharpToolUtil.requiresSharpTool(state))
+        {
+            return true; // Sharp tools should be able to mine plant blocks efficiently
         }
 
         if (!state.is(ModTags.Blocks.MINEABLE))
