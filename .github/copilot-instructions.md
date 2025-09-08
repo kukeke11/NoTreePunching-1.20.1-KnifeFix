@@ -88,6 +88,9 @@ org.gradle.daemon=true
 
 # Launch Minecraft server with mod loaded
 ./gradlew Forge:runServer
+
+# Run GameTests for harvesting mechanics validation
+./gradlew Forge:gameTestServer
 ```
 
 ### Critical Validation After Java Changes
@@ -111,7 +114,32 @@ org.gradle.daemon=true
 
 # Or run full build to verify everything works
 ./gradlew Forge:build
+
+# Run functional tests (GameTests) - headless compatible
+./gradlew Forge:gameTestServer
 ```
+
+### GameTest System for Harvesting Mechanics
+
+**Running GameTests:**
+```bash
+# Execute comprehensive harvesting mechanics tests
+./gradlew Forge:gameTestServer
+```
+
+**GameTest Coverage:**
+- **Sharp Tool vs Hand Testing:** Validates knife/hand behavior on flowers and grass
+- **Drop Logic Verification:** Ensures correct item drops (flowers, plant_fiber) with knives
+- **No-Drop Validation:** Confirms no drops when using bare hands  
+- **Performance Regression Detection:** Batch testing (5x5 area) for timing observation
+- **Configuration Respect:** Tests that system respects enabled/disabled states
+
+**Success/Failure Conditions:**
+- **PASS:** All GameTests complete without assertion failures
+- **FAIL:** Any test fails assertion (wrong drops, incorrect tool behavior)
+- **PERFORMANCE WARNING:** Batch test exceeds 5-second threshold (regression indicator)
+
+**Note:** GameTests are for *functional* validation of harvesting mechanics. For in-depth performance analysis, use dedicated profilers like JProfiler or async-profiler.
 
 ### Build Warnings (Safe to Ignore)
 - `[removal]` warnings about deprecated Forge APIs - planned migration items
