@@ -1,6 +1,5 @@
 package com.alcatrazescapee.notreepunching.util;
 
-import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -24,7 +23,6 @@ public final class SharpToolUtil
     
     // Cache for performance optimization
     private static final Map<Item, Boolean> SHARP_TOOL_CACHE = new ConcurrentHashMap<>();
-    private static final Map<Block, Boolean> PLANT_BLOCK_CACHE = new ConcurrentHashMap<>();
     
     /**
      * Check if an ItemStack is a sharp tool capable of harvesting plants
@@ -62,11 +60,9 @@ public final class SharpToolUtil
             return false; // Requirement disabled, no blocks require sharp tools
         }
         
-        return PLANT_BLOCK_CACHE.computeIfAbsent(state.getBlock(), block ->
-            state.is(ModTags.Blocks.REQUIRES_SHARP_TOOL) || 
-            state.is(BlockTags.SWORD_EFFICIENT) ||
-            state.is(ModTags.Blocks.PLANT_FIBER_SOURCES)
-        );
+        // Use state-based checking to be more accurate (not cached by block since states can vary)
+        return state.is(ModTags.Blocks.REQUIRES_SHARP_TOOL) || 
+               state.is(ModTags.Blocks.PLANT_FIBER_SOURCES);
     }
     
     /**
@@ -103,7 +99,6 @@ public final class SharpToolUtil
     public static void clearCache()
     {
         SHARP_TOOL_CACHE.clear();
-        PLANT_BLOCK_CACHE.clear();
         LOGGER.debug("Sharp tool caches cleared");
     }
     

@@ -1,6 +1,7 @@
 package com.alcatrazescapee.notreepunching.common.items;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -16,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 import com.alcatrazescapee.notreepunching.Config;
+import com.alcatrazescapee.notreepunching.common.ModTags;
 import com.alcatrazescapee.notreepunching.platform.Platform;
 import com.alcatrazescapee.notreepunching.platform.PlatformOverride;
 import com.alcatrazescapee.notreepunching.util.SharpToolUtil;
@@ -37,12 +39,19 @@ public class KnifeItem extends SwordItem
     /**
      * Override to make knives effective against plant-type blocks.
      * This allows knives to be recognized as the correct tool for harvesting plants.
-     * Now delegates to SharpToolUtil for tag-based detection while preserving exact behavior.
+     * Preserves backward compatibility: knives always work on plants regardless of sharp tool system settings.
      */
     @Override
     public boolean isCorrectToolForDrops(ItemStack stack, BlockState state)
     {
-        // Use the new sharp tool system - knives are included in the sharp_tools tag
+        // Check if this is a plant that requires sharp tools (independent of system settings)
+        // This ensures backward compatibility - knives always work on plants
+        if (isPlantBlock(state))
+        {
+            return true;
+        }
+        
+        // Use the new sharp tool system for extended compatibility when enabled
         if (SharpToolUtil.isSharpTool(stack) && SharpToolUtil.requiresSharpTool(state))
         {
             return true;
@@ -51,16 +60,34 @@ public class KnifeItem extends SwordItem
         // Fall back to parent behavior for other blocks
         return super.isCorrectToolForDrops(stack, state);
     }
+    
+    /**
+     * Check if a block state represents a plant that should be harvestable with knives.
+     * This provides the core knife functionality independent of tag system configuration.
+     */
+    private boolean isPlantBlock(BlockState state)
+    {
+        // Check core plant tags that knives should always work on
+        return state.is(ModTags.Blocks.REQUIRES_SHARP_TOOL) || 
+               state.is(ModTags.Blocks.PLANT_FIBER_SOURCES) ||
+               state.is(BlockTags.SWORD_EFFICIENT);
+    }
 
     /**
      * Override to provide faster destroy speed for plant blocks.
      * This ensures knives harvest plants efficiently.
-     * Now delegates to SharpToolUtil for tag-based speed calculation.
+     * Preserves backward compatibility: knives always get fast speed on plants.
      */
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state)
     {
-        // Use the new sharp tool system for destroy speed calculation
+        // Check if this is a plant that knives should work on (independent of system settings)
+        if (isPlantBlock(state))
+        {
+            return 15.0f; // Fast speed for knives on plants (original behavior)
+        }
+        
+        // Use the new sharp tool system for extended compatibility when enabled
         float sharpToolSpeed = SharpToolUtil.getDestroySpeed(stack, state);
         if (sharpToolSpeed > 1.0f)
         {

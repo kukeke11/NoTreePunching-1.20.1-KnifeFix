@@ -198,12 +198,6 @@ public final class HarvestBlockHandler
             return true; // Tool reported itself as harvesting faster than normal, in which case when checking if we can *mine* the block, we return true.
         }
 
-        // For mining checks, also allow sharp tools on plant blocks to have fast break speed
-        if (checkingCanMine && SharpToolUtil.isSharpTool(stack) && SharpToolUtil.requiresSharpTool(state))
-        {
-            return true; // Sharp tools should be able to mine plant blocks efficiently
-        }
-
         if (!state.is(ModTags.Blocks.MINEABLE))
         {
             return true; // If we have no idea what tool can mine this block, we have to return true, as otherwise it's impossible to mine
