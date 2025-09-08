@@ -1,9 +1,0 @@
-{
-  "__comment__": "This file was automatically created by mcresources",
-  "replace": false,
-  "values": [
-    "#minecraft:mineable/shovel",
-    "#minecraft:mineable/hoe",
-    "#minecraft:mineable/axe"
-  ]
-}

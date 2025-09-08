@@ -1,0 +1,17 @@
+{
+  "values": [
+    "#minecraft:flowers",
+    "#minecraft:small_flowers", 
+    "#minecraft:tall_flowers",
+    "#minecraft:crops",
+    "#minecraft:saplings",
+    "minecraft:grass", 
+    "minecraft:tall_grass", 
+    "minecraft:fern", 
+    "minecraft:large_fern",
+    "minecraft:dead_bush",
+    "minecraft:seagrass",
+    "minecraft:tall_seagrass",
+    "#notreepunching:plant_fiber_sources"
+  ]
+}

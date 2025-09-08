@@ -19,7 +19,10 @@ def main():
     fabric.lang_buffer = forge.lang_buffer = common.lang_buffer
 
     for rm in each:
-        utils.clean_generated_resources('/'.join(rm.resource_dir))
+        try:
+            utils.clean_generated_resources(rm.resource_dir, [])
+        except FileNotFoundError:
+            pass  # Directory doesn't exist yet, skip cleaning
 
     do_assets(common)
     do_advancements(common)
@@ -223,6 +226,22 @@ def do_tags(forge: ResourceManager, fabric: ResourceManager, common: ResourceMan
 
     # Add plant fiber sources block tag for future extensibility
     common.block_tag('plant_fiber_sources', 'minecraft:grass', 'minecraft:tall_grass')
+    
+    # Add requires sharp tool block tag - includes plants that need sharp tools for drops
+    common.block_tag('requires_sharp_tool', 
+        '#minecraft:flowers', 
+        '#minecraft:small_flowers', 
+        '#minecraft:tall_flowers',
+        '#minecraft:crops',
+        '#minecraft:saplings',
+        'minecraft:grass', 
+        'minecraft:tall_grass', 
+        'minecraft:fern', 
+        'minecraft:large_fern',
+        'minecraft:dead_bush',
+        'minecraft:seagrass',
+        'minecraft:tall_seagrass',
+        '#notreepunching:plant_fiber_sources')
 
     common.block('minecraft:gravel').with_tag('always_breakable').with_tag('always_drops')
 
