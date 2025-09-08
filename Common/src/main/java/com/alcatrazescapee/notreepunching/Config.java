@@ -14,6 +14,7 @@ import net.minecraftforge.common.MinecraftForge;
 import org.slf4j.Logger;
 
 import com.alcatrazescapee.notreepunching.platform.XPlatform;
+import com.alcatrazescapee.notreepunching.util.SharpToolUtil;
 
 /**
  * Compatibility layer that maintains the same interface as the original Epsilon config
@@ -41,6 +42,10 @@ public enum Config
     public final ConfigValue<Boolean> fireStarterCanMakeSoulCampfire = new ConfigValue<>(() -> ForgeConfig.fireStarterCanMakeSoulCampfire.get());
     public final ConfigValue<Boolean> largeVesselKeepsContentsWhenBroken = new ConfigValue<>(() -> ForgeConfig.largeVesselKeepsContentsWhenBroken.get());
     public final ConfigValue<List<Block>> potteryBlockSequences = new ConfigValue<>(ForgeConfig::getPotteryBlockSequence);
+    
+    // Sharp tool system config values
+    public final ConfigValue<Boolean> enableSharpToolSystem = new ConfigValue<>(() -> ForgeConfig.enableSharpToolSystem.get());
+    public final ConfigValue<Boolean> requireSharpToolForPlants = new ConfigValue<>(() -> ForgeConfig.requireSharpToolForPlants.get());
 
     static 
     {
@@ -49,6 +54,7 @@ public enum Config
             if (NoTreePunching.MOD_ID.equals(event.getConfig().getModId()))
             {
                 ForgeConfig.clearCache();
+                SharpToolUtil.onConfigReload(); // Clear sharp tool caches when config reloads
                 LOGGER.info("NoTreePunching config reloaded");
             }
         });

@@ -47,6 +47,7 @@ public final class ModTags
         public static final TagKey<Block> NEEDS_FLINT_TOOL = create("needs_flint_tool");
 
         public static final TagKey<Block> PLANT_FIBER_SOURCES = create("plant_fiber_sources");
+        public static final TagKey<Block> REQUIRES_SHARP_TOOL = create("requires_sharp_tool");
         
         public static final TagKey<Block> KNAPPABLE_STONE = create("knappable_stone");
 

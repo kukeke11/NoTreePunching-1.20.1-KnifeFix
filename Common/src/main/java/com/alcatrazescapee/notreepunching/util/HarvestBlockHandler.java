@@ -23,6 +23,7 @@ import com.alcatrazescapee.notreepunching.NoTreePunching;
 import com.alcatrazescapee.notreepunching.common.ModTags;
 import com.alcatrazescapee.notreepunching.mixin.AbstractBlockAccessor;
 import com.alcatrazescapee.notreepunching.mixin.AbstractBlockStateAccessor;
+import com.alcatrazescapee.notreepunching.util.SharpToolUtil;
 
 
 public final class HarvestBlockHandler
@@ -92,20 +93,29 @@ public final class HarvestBlockHandler
 
         // Check if all possible states have destroySpeed == 0 (instant break blocks like grass/flowers)
         boolean allStatesInstantBreak = true;
+        boolean anyStateRequiresSharpTool = false;
+        
         for (BlockState state : block.getStateDefinition().getPossibleStates())
         {
             if (((AbstractBlockStateAccessor) state).getDestroySpeed() != 0F)
             {
                 allStatesInstantBreak = false;
-                break;
+            }
+            
+            // Check if any state requires sharp tools (plants that need knives)
+            if (state.is(ModTags.Blocks.REQUIRES_SHARP_TOOL) || 
+                state.is(ModTags.Blocks.PLANT_FIBER_SOURCES))
+            {
+                anyStateRequiresSharpTool = true;
             }
         }
 
-        // Skip forcing requiresCorrectToolForDrops for blocks where all states have destroySpeed == 0
-        // This restores vanilla-style instant breaking for grass/flowers by hand
-        if (!allStatesInstantBreak)
+        // Force requiresCorrectToolForDrops for:
+        // 1. All non-instant-break blocks (original behavior)
+        // 2. Instant-break blocks that require sharp tools (plants)
+        if (!allStatesInstantBreak || anyStateRequiresSharpTool)
         {
-            // Forcefully set everything else to require a tool
+            // Forcefully set to require a tool for drops
             // Need to do both the block settings and the block state since the value is copied there for every state
             settings.requiresCorrectToolForDrops();
             for (BlockState state : block.getStateDefinition().getPossibleStates())
@@ -174,6 +184,13 @@ public final class HarvestBlockHandler
         if (stack.isCorrectToolForDrops(state))
         {
             return true; // Tool has already reported itself as the correct tool. This includes a tier check in vanilla.
+        }
+
+        // Check if this is a sharp tool being used on a plant that requires sharp tools
+        // This extends sharp tool functionality to any item tagged as sharp_tools, not just knives
+        if (SharpToolUtil.isSharpTool(stack) && SharpToolUtil.requiresSharpTool(state))
+        {
+            return true; // Sharp tool can harvest plants that require sharp tools
         }
 
         if (checkingCanMine && stack.getDestroySpeed(state) > 1.0f)

@@ -1,12 +1,15 @@
 {
-  "__comment__": "This file was automatically created by mcresources",
-  "replace": false,
   "values": [
-    "#notreepunching:mineable_with_mattock",
     "#minecraft:mineable/pickaxe",
+    "#minecraft:mineable/axe",
     "#minecraft:mineable/shovel",
     "#minecraft:mineable/hoe",
-    "#minecraft:mineable/axe",
-    "#minecraft:sword_efficient"
+    "#notreepunching:requires_sharp_tool",
+    "#notreepunching:plant_fiber_sources",
+    "#minecraft:flowers",
+    "#minecraft:small_flowers",
+    "#minecraft:tall_flowers",
+    "#minecraft:crops",
+    "#minecraft:saplings"
   ]
 }
