@@ -90,7 +90,7 @@ org.gradle.daemon=true
 ./gradlew Forge:runServer
 
 # Run GameTests for harvesting mechanics validation
-./gradlew Forge:gameTestServer
+./gradlew Forge:runGameTestServer
 ```
 
 ### Critical Validation After Java Changes
@@ -116,7 +116,7 @@ org.gradle.daemon=true
 ./gradlew Forge:build
 
 # Run functional tests (GameTests) - headless compatible
-./gradlew Forge:gameTestServer
+./gradlew Forge:runGameTestServer
 ```
 
 ### GameTest System for Harvesting Mechanics
@@ -124,7 +124,7 @@ org.gradle.daemon=true
 **Running GameTests:**
 ```bash
 # Execute comprehensive harvesting mechanics tests
-./gradlew Forge:gameTestServer
+./gradlew Forge:runGameTestServer
 ```
 
 **GameTest Coverage:**
