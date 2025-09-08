@@ -39,62 +39,58 @@ public class KnifeItem extends SwordItem
     /**
      * Override to make knives effective against plant-type blocks.
      * This allows knives to be recognized as the correct tool for harvesting plants.
-     * Preserves backward compatibility: knives always work on plants regardless of sharp tool system settings.
+     * Knives ALWAYS work on plants, regardless of Sharp Tool System configuration (backward compatibility).
      */
     @Override
     public boolean isCorrectToolForDrops(ItemStack stack, BlockState state)
     {
-        // Check if this is a plant that requires sharp tools (independent of system settings)
-        // This ensures backward compatibility - knives always work on plants
+        // ALWAYS allow knives on plants - this is the core NTP behavior and must work regardless of config
+        // This ensures backward compatibility and fixes the issue where knives can't harvest plants
         if (isPlantBlock(state))
         {
             return true;
         }
         
-        // Use the new sharp tool system for extended compatibility when enabled
-        if (SharpToolUtil.isSharpTool(stack) && SharpToolUtil.requiresSharpTool(state))
-        {
-            return true;
-        }
-        
-        // Fall back to parent behavior for other blocks
+        // Fall back to parent behavior for other blocks (swords work on cobwebs, etc.)
         return super.isCorrectToolForDrops(stack, state);
     }
     
     /**
      * Check if a block state represents a plant that should be harvestable with knives.
-     * This provides the core knife functionality independent of tag system configuration.
+     * This provides the core knife functionality independent of Sharp Tool System configuration.
+     * Knives should ALWAYS work on plants - this is fundamental NTP behavior.
      */
     private boolean isPlantBlock(BlockState state)
     {
         // Check core plant tags that knives should always work on
+        // These checks work regardless of Sharp Tool System configuration
         return state.is(ModTags.Blocks.REQUIRES_SHARP_TOOL) || 
                state.is(ModTags.Blocks.PLANT_FIBER_SOURCES) ||
-               state.is(BlockTags.SWORD_EFFICIENT);
+               state.is(BlockTags.SWORD_EFFICIENT) ||
+               // Also check common plant tags to ensure comprehensive coverage
+               state.is(BlockTags.FLOWERS) ||
+               state.is(BlockTags.SMALL_FLOWERS) ||
+               state.is(BlockTags.TALL_FLOWERS) ||
+               state.is(BlockTags.CROPS) ||
+               state.is(BlockTags.SAPLINGS);
     }
 
     /**
      * Override to provide faster destroy speed for plant blocks.
      * This ensures knives harvest plants efficiently.
-     * Preserves backward compatibility: knives always get fast speed on plants.
+     * Knives ALWAYS get fast speed on plants, regardless of Sharp Tool System configuration.
      */
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state)
     {
-        // Check if this is a plant that knives should work on (independent of system settings)
+        // ALWAYS give knives fast speed on plants - this is core NTP behavior
+        // This ensures knives break plants quickly regardless of configuration
         if (isPlantBlock(state))
         {
             return 15.0f; // Fast speed for knives on plants (original behavior)
         }
         
-        // Use the new sharp tool system for extended compatibility when enabled
-        float sharpToolSpeed = SharpToolUtil.getDestroySpeed(stack, state);
-        if (sharpToolSpeed > 1.0f)
-        {
-            return sharpToolSpeed; // Returns 15.0f for sharp tools on applicable blocks
-        }
-        
-        // Fall back to parent behavior for other blocks
+        // Fall back to parent behavior for other blocks (swords have 1.5f speed on cobwebs)
         return super.getDestroySpeed(stack, state);
     }
 
