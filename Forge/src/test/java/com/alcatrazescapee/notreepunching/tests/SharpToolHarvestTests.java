@@ -122,8 +122,7 @@ public class SharpToolHarvestTests
         BlockPos grassPos = new BlockPos(1, 1, 1); // Place on default template
         
         // Place grass on the platform (short grass plant, not grass_block)
-        // Try GRASS first, fallback to SHORT_GRASS if available in mappings
-        helper.setBlock(grassPos, Blocks.GRASS);
+        helper.setBlock(grassPos, Blocks.SHORT_GRASS);
         
         // Create a mock server player and give them a flint knife
         ServerPlayer player = (ServerPlayer) helper.makeMockPlayer();
@@ -135,7 +134,7 @@ public class SharpToolHarvestTests
         helper.assertTrue(blockBroken, "Block should have been successfully broken");
         
         // Assert that the block is now air
-        helper.assertBlockNotPresent(Blocks.GRASS, grassPos);
+        helper.assertBlockNotPresent(Blocks.SHORT_GRASS, grassPos);
         
         // Use polling assertion to check for plant fiber drops
         helper.succeedWhen(() -> helper.assertItemEntityPresent(ModItems.GRASS_FIBER.get(), grassPos, 2.0));
@@ -150,7 +149,7 @@ public class SharpToolHarvestTests
         BlockPos grassPos = new BlockPos(1, 1, 1); // Place on default template
         
         // Place grass on the platform (short grass plant, not grass_block)
-        helper.setBlock(grassPos, Blocks.GRASS);
+        helper.setBlock(grassPos, Blocks.SHORT_GRASS);
         
         // Create a mock server player with empty hands
         ServerPlayer player = (ServerPlayer) helper.makeMockPlayer();
@@ -162,7 +161,7 @@ public class SharpToolHarvestTests
         helper.assertTrue(blockBroken, "Block should have been successfully broken");
         
         // Assert that the block is now air
-        helper.assertBlockNotPresent(Blocks.GRASS, grassPos);
+        helper.assertBlockNotPresent(Blocks.SHORT_GRASS, grassPos);
         
         // Wait ~2 ticks before checking for no drops to give the game time to spawn any items
         helper.runAfterDelay(2, () -> {
