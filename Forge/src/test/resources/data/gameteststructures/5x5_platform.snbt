@@ -20,7 +20,7 @@
   ],
   palette: [
     {
-      Name: "minecraft:stone"
+      Name: "minecraft:grass_block"
     }
   ],
   DataVersion: 3465
