@@ -2,7 +2,7 @@
 Always use: agentic-tools, sequential-thinking and context7
 # Agent policy for Agentic Tools storage
 - Always call `agentic-tools` with `workingDirectory` set to the repo root **absolute path** (e.g., `$GITHUB_WORKSPACE`), not `"."`.
-- Read/write only in `REPO_ROOT/.agentic-tools-mcp/`; if missing, create it and commit a `.gitkeep`.
+- Read/write only in `REPO_ROOT/.agentic-tools-mcp/`;
 - After any change under `.agentic-tools-mcp/`, stage & commit those files with the current issue in the message, and include them in the same PR as code changes.
 
 ## Repository Overview
