@@ -1,5 +1,5 @@
 # No Tree Punching - Coding Agent Instructions
-
+Always use: agentic-tools, sequential-thinking and context7
 # Agent policy for Agentic Tools storage
 - Always call `agentic-tools` with `workingDirectory` set to the repo root **absolute path** (e.g., `$GITHUB_WORKSPACE`), not `"."`.
 - Read/write only in `REPO_ROOT/.agentic-tools-mcp/`; if missing, create it and commit a `.gitkeep`.
