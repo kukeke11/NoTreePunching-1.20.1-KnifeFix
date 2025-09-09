@@ -30,10 +30,10 @@ public class SharpToolHarvestTests
     /**
      * Test Case 1: Knife on Flower - Verify that breaking a flower (Poppy) with a flint knife correctly drops the flower item.
      */
-    @GameTest(template = "notreepunching:platform")
+    @GameTest(template = "empty")
     public static void test_knife_on_flower_drops_item(GameTestHelper helper)
     {
-        BlockPos flowerPos = new BlockPos(1, 1, 1);
+        BlockPos flowerPos = new BlockPos(1, 2, 1); // Place at Y=2 for empty template
         Player player = helper.makeMockPlayer();
         
         // Place a poppy on the platform
@@ -62,10 +62,10 @@ public class SharpToolHarvestTests
     /**
      * Test Case 2: Hand on Flower - Verify that breaking a flower with a bare hand results in no item drop.
      */
-    @GameTest(template = "notreepunching:platform")
+    @GameTest(template = "empty")
     public static void test_hand_on_flower_no_drops(GameTestHelper helper)
     {
-        BlockPos flowerPos = new BlockPos(1, 1, 1);
+        BlockPos flowerPos = new BlockPos(1, 2, 1); // Place at Y=2 for empty template
         Player player = helper.makeMockPlayer();
         
         // Place a poppy on the platform
@@ -93,10 +93,10 @@ public class SharpToolHarvestTests
     /**
      * Test Case 3: Knife on Grass - Verify that breaking a grass block with a flint knife correctly drops plant_fiber.
      */
-    @GameTest(template = "notreepunching:platform")
+    @GameTest(template = "empty")
     public static void test_knife_on_grass_drops_plant_fiber(GameTestHelper helper)
     {
-        BlockPos grassPos = new BlockPos(1, 1, 1);
+        BlockPos grassPos = new BlockPos(1, 2, 1); // Place at Y=2 for empty template
         Player player = helper.makeMockPlayer();
         
         // Place grass on the platform
@@ -124,10 +124,10 @@ public class SharpToolHarvestTests
     /**
      * Test Case 4: Hand on Grass - Verify that breaking a grass block with a bare hand results in no plant_fiber drop.
      */
-    @GameTest(template = "notreepunching:platform")
+    @GameTest(template = "empty")
     public static void test_hand_on_grass_no_plant_fiber(GameTestHelper helper)
     {
-        BlockPos grassPos = new BlockPos(1, 1, 1);
+        BlockPos grassPos = new BlockPos(1, 2, 1); // Place at Y=2 for empty template
         Player player = helper.makeMockPlayer();
         
         // Place grass on the platform
@@ -157,7 +157,7 @@ public class SharpToolHarvestTests
      * While not a true performance benchmark, this helps identify significant performance regressions
      * in block-breaking or drop-handling logic by observing execution time.
      */
-    @GameTest(template = "notreepunching:5x5_platform")
+    @GameTest(template = "empty")
     public static void test_batch_flower_harvest_performance(GameTestHelper helper)
     {
         Player player = helper.makeMockPlayer();
@@ -175,7 +175,7 @@ public class SharpToolHarvestTests
         {
             for (int z = 0; z < 5; z++)
             {
-                BlockPos flowerPos = new BlockPos(x, 1, z);
+                BlockPos flowerPos = new BlockPos(x, 2, z); // Y=2 for empty template
                 
                 // Place a flower
                 helper.setBlock(flowerPos, Blocks.POPPY);
@@ -213,10 +213,10 @@ public class SharpToolHarvestTests
      * Test verifying that the sharp tool system respects configuration settings.
      * This ensures that when the system is disabled, tools behave like vanilla.
      */
-    @GameTest(template = "notreepunching:platform")
+    @GameTest(template = "empty")
     public static void test_sharp_tool_system_configuration(GameTestHelper helper)
     {
-        BlockPos flowerPos = new BlockPos(1, 1, 1);
+        BlockPos flowerPos = new BlockPos(1, 2, 1); // Y=2 for empty template
         Player player = helper.makeMockPlayer();
         
         // Place a poppy
