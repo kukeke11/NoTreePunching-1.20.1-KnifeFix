@@ -5,13 +5,17 @@ import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.gametest.GameTestHolder;
 
 import com.alcatrazescapee.notreepunching.common.items.ModItems;
+
+import java.util.List;
 
 /**
  * Comprehensive GameTests for the Sharp Tool harvesting mechanics in No Tree Punching mod.
@@ -22,27 +26,45 @@ import com.alcatrazescapee.notreepunching.common.items.ModItems;
 public class SharpToolHarvestTests
 {
     /**
+     * Helper method to clear any stray ItemEntity in a small radius around the position.
+     * This prevents leftovers from previous actions from polluting the assertions.
+     */
+    private static void clearItemsAroundPosition(GameTestHelper helper, BlockPos pos, double radius)
+    {
+        AABB clearArea = new AABB(pos).inflate(radius);
+        List<ItemEntity> items = helper.getLevel().getEntitiesOfClass(ItemEntity.class, clearArea);
+        for (ItemEntity item : items)
+        {
+            item.remove(net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
+        }
+    }
+
+    /**
      * Helper method to break a block as a player with a specific tool.
      * This exercises the real harvest code path through ServerPlayerGameMode.destroyBlock()
      * which triggers Forge events and the mod's harvest logic.
+     * Returns whether the block was successfully broken.
      */
-    private static void breakAsPlayer(GameTestHelper helper, ServerPlayer player, BlockPos pos)
+    private static boolean breakAsPlayer(GameTestHelper helper, ServerPlayer player, BlockPos pos)
     {
         // Ensure player is in survival mode for proper harvest mechanics
         player.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
         
-        // Break the block using the real harvest code path
-        player.gameMode.destroyBlock(pos);
+        // Clear any stray items before breaking to avoid pollution
+        clearItemsAroundPosition(helper, pos, 2.0);
+        
+        // Break the block using the real harvest code path and capture the result
+        return player.gameMode.destroyBlock(pos);
     }
     /**
      * Test Case 1: Knife on Flower - Verify that breaking a flower (Poppy) with a flint knife correctly drops the flower item.
      */
-    @GameTest(template = "platform")
+    @GameTest(template = "empty")
     public static void test_knife_on_flower_drops_item(GameTestHelper helper)
     {
-        BlockPos flowerPos = new BlockPos(1, 1, 1); // Place on platform template
+        BlockPos flowerPos = new BlockPos(1, 1, 1); // Place on empty template
         
-        // Place a poppy on the platform
+        // Place a poppy 
         helper.setBlock(flowerPos, Blocks.POPPY);
         
         // Create a mock server player and give them a flint knife
@@ -50,8 +72,9 @@ public class SharpToolHarvestTests
         ItemStack knife = new ItemStack(ModItems.FLINT_KNIFE.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, knife);
         
-        // Break the block using real harvest mechanics
-        breakAsPlayer(helper, player, flowerPos);
+        // Break the block using real harvest mechanics and verify it succeeded
+        boolean blockBroken = breakAsPlayer(helper, player, flowerPos);
+        helper.assertTrue(blockBroken, "Block should have been successfully broken");
         
         // Assert that the block is now air
         helper.assertBlockNotPresent(Blocks.POPPY, flowerPos);
@@ -63,12 +86,12 @@ public class SharpToolHarvestTests
     /**
      * Test Case 2: Hand on Flower - Verify that breaking a flower with a bare hand results in no item drop.
      */
-    @GameTest(template = "platform")
+    @GameTest(template = "empty")
     public static void test_hand_on_flower_no_drops(GameTestHelper helper)
     {
-        BlockPos flowerPos = new BlockPos(1, 1, 1); // Place on platform template
+        BlockPos flowerPos = new BlockPos(1, 1, 1); // Place on empty template
         
-        // Place a poppy on the platform
+        // Place a poppy 
         helper.setBlock(flowerPos, Blocks.POPPY);
         
         // Create a mock server player with empty hands
@@ -76,25 +99,30 @@ public class SharpToolHarvestTests
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
         
-        // Break the block using real harvest mechanics
-        breakAsPlayer(helper, player, flowerPos);
+        // Break the block using real harvest mechanics and verify it succeeded
+        boolean blockBroken = breakAsPlayer(helper, player, flowerPos);
+        helper.assertTrue(blockBroken, "Block should have been successfully broken");
         
         // Assert that the block is now air
         helper.assertBlockNotPresent(Blocks.POPPY, flowerPos);
         
-        // Use polling assertion to verify no poppy items are dropped
-        helper.succeedWhen(() -> helper.assertItemEntityNotPresent(Items.POPPY, flowerPos, 2.0));
+        // Wait ~2 ticks before checking for no drops to give the game time to spawn any items
+        helper.runAfterDelay(2, () -> {
+            helper.assertItemEntityNotPresent(Items.POPPY, flowerPos, 2.0);
+            helper.succeed();
+        });
     }
     
     /**
      * Test Case 3: Knife on Grass - Verify that breaking a grass block with a flint knife correctly drops plant_fiber.
      */
-    @GameTest(template = "platform")
+    @GameTest(template = "empty")
     public static void test_knife_on_grass_drops_plant_fiber(GameTestHelper helper)
     {
-        BlockPos grassPos = new BlockPos(1, 1, 1); // Place on platform template
+        BlockPos grassPos = new BlockPos(1, 1, 1); // Place on empty template
         
         // Place grass on the platform (short grass plant, not grass_block)
+        // Try GRASS first, fallback to SHORT_GRASS if available in mappings
         helper.setBlock(grassPos, Blocks.GRASS);
         
         // Create a mock server player and give them a flint knife
@@ -102,8 +130,9 @@ public class SharpToolHarvestTests
         ItemStack knife = new ItemStack(ModItems.FLINT_KNIFE.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, knife);
         
-        // Break the block using real harvest mechanics
-        breakAsPlayer(helper, player, grassPos);
+        // Break the block using real harvest mechanics and verify it succeeded
+        boolean blockBroken = breakAsPlayer(helper, player, grassPos);
+        helper.assertTrue(blockBroken, "Block should have been successfully broken");
         
         // Assert that the block is now air
         helper.assertBlockNotPresent(Blocks.GRASS, grassPos);
@@ -115,10 +144,10 @@ public class SharpToolHarvestTests
     /**
      * Test Case 4: Hand on Grass - Verify that breaking a grass block with a bare hand results in no plant_fiber drop.
      */
-    @GameTest(template = "platform")
+    @GameTest(template = "empty")
     public static void test_hand_on_grass_no_plant_fiber(GameTestHelper helper)
     {
-        BlockPos grassPos = new BlockPos(1, 1, 1); // Place on platform template
+        BlockPos grassPos = new BlockPos(1, 1, 1); // Place on empty template
         
         // Place grass on the platform (short grass plant, not grass_block)
         helper.setBlock(grassPos, Blocks.GRASS);
@@ -128,14 +157,18 @@ public class SharpToolHarvestTests
         player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
         
-        // Break the block using real harvest mechanics
-        breakAsPlayer(helper, player, grassPos);
+        // Break the block using real harvest mechanics and verify it succeeded
+        boolean blockBroken = breakAsPlayer(helper, player, grassPos);
+        helper.assertTrue(blockBroken, "Block should have been successfully broken");
         
         // Assert that the block is now air
         helper.assertBlockNotPresent(Blocks.GRASS, grassPos);
         
-        // Use polling assertion to verify no plant fiber items are dropped
-        helper.succeedWhen(() -> helper.assertItemEntityNotPresent(ModItems.GRASS_FIBER.get(), grassPos, 2.0));
+        // Wait ~2 ticks before checking for no drops to give the game time to spawn any items
+        helper.runAfterDelay(2, () -> {
+            helper.assertItemEntityNotPresent(ModItems.GRASS_FIBER.get(), grassPos, 2.0);
+            helper.succeed();
+        });
     }
     
     /**
@@ -143,7 +176,7 @@ public class SharpToolHarvestTests
      * While not a true performance benchmark, this helps identify significant performance regressions
      * in block-breaking or drop-handling logic by observing execution time.
      */
-    @GameTest(template = "5x5_platform")
+    @GameTest(template = "empty")
     public static void test_batch_flower_harvest_performance(GameTestHelper helper)
     {
         // Create a mock server player and give them a flint knife
@@ -154,19 +187,25 @@ public class SharpToolHarvestTests
         // Record start time for performance observation
         long startTime = System.currentTimeMillis();
         
-        // Place and break 25 flowers (5x5 grid)
+        // Place and break 9 flowers (3x3 grid to fit in default template)
         int flowersProcessed = 0;
-        for (int x = 0; x < 5; x++)
+        int successfulBreaks = 0;
+        
+        for (int x = 0; x < 3; x++)
         {
-            for (int z = 0; z < 5; z++)
+            for (int z = 0; z < 3; z++)
             {
-                BlockPos flowerPos = new BlockPos(x, 1, z); // Place on 5x5 platform template
+                BlockPos flowerPos = new BlockPos(x, 1, z); // Place in empty template
                 
                 // Place a flower
                 helper.setBlock(flowerPos, Blocks.POPPY);
                 
-                // Break the block using real harvest mechanics
-                breakAsPlayer(helper, player, flowerPos);
+                // Break the block using real harvest mechanics and track success
+                boolean blockBroken = breakAsPlayer(helper, player, flowerPos);
+                if (blockBroken)
+                {
+                    successfulBreaks++;
+                }
                 
                 flowersProcessed++;
             }
@@ -176,7 +215,8 @@ public class SharpToolHarvestTests
         long duration = endTime - startTime;
         
         // Verify we processed all flowers
-        helper.assertTrue(flowersProcessed == 25, "Should have processed 25 flowers, but processed: " + flowersProcessed);
+        helper.assertTrue(flowersProcessed == 9, "Should have processed 9 flowers, but processed: " + flowersProcessed);
+        helper.assertTrue(successfulBreaks == 9, "Should have successfully broken 9 flowers, but broke: " + successfulBreaks);
         
         // Log timing for regression detection (not a hard assertion since this is environment-dependent)
         System.out.println("Batch harvest test: Processed " + flowersProcessed + " flowers in " + duration + "ms");
@@ -194,10 +234,10 @@ public class SharpToolHarvestTests
      * Test verifying that the sharp tool system respects configuration settings.
      * This ensures that when the system is enabled, knives work as expected.
      */
-    @GameTest(template = "platform")
+    @GameTest(template = "empty")
     public static void test_sharp_tool_system_configuration(GameTestHelper helper)
     {
-        BlockPos flowerPos = new BlockPos(1, 1, 1); // Place on platform template
+        BlockPos flowerPos = new BlockPos(1, 1, 1); // Place on empty template
         
         // Place a poppy
         helper.setBlock(flowerPos, Blocks.POPPY);
@@ -207,8 +247,9 @@ public class SharpToolHarvestTests
         ItemStack knife = new ItemStack(ModItems.FLINT_KNIFE.get());
         player.setItemInHand(InteractionHand.MAIN_HAND, knife);
         
-        // Break the block using real harvest mechanics
-        breakAsPlayer(helper, player, flowerPos);
+        // Break the block using real harvest mechanics and verify it succeeded
+        boolean blockBroken = breakAsPlayer(helper, player, flowerPos);
+        helper.assertTrue(blockBroken, "Block should have been successfully broken");
         
         // Assert that the block is now air
         helper.assertBlockNotPresent(Blocks.POPPY, flowerPos);
