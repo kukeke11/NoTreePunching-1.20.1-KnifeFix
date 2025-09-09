@@ -29,6 +29,9 @@ Always use: agentic-tools, sequential-thinking and context7
 # 3. Verify build artifacts created
 ls -la Forge/build/libs/
 # Should contain: notreepunching-forge-{version}.jar
+# 4. When you are asked to run feature tests
+export GRADLE_OPTS="-Xmx4G -Xms1G"
+./gradlew Forge:runGameTestServer --refresh-dependencies --no-daemon
 ```
 
 **Build timing:** 3-5 minutes for initial setup, 1-2 minutes for subsequent builds
