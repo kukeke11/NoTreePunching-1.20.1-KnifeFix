@@ -84,6 +84,55 @@ minecraft {
     }
 }
 
+// EULA automation tasks
+tasks.register("acceptServerEula") {
+    description = "Automatically accepts the Minecraft EULA for server runs"
+    doLast {
+        val runDir = file("run")
+        runDir.mkdirs()
+        val eulaFile = file("run/eula.txt")
+        eulaFile.writeText("# Generated automatically by Gradle\n# By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n")
+        println("Created eula.txt in run directory")
+    }
+}
+
+tasks.register("acceptGameTestEula") {
+    description = "Automatically accepts the Minecraft EULA for GameTest server runs"
+    doLast {
+        val runTestDir = file("run-test")
+        runTestDir.mkdirs()  
+        val eulaFile = file("run-test/eula.txt")
+        eulaFile.writeText("# Generated automatically by Gradle\n# By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n")
+        println("Created eula.txt in run-test directory")
+    }
+}
+
+// Add EULA acceptance directly to run tasks
+tasks.configureEach {
+    if (name == "runServer") {
+        doFirst {
+            val runDir = file("run")
+            runDir.mkdirs()
+            val eulaFile = file("run/eula.txt")
+            if (!eulaFile.exists()) {
+                eulaFile.writeText("# Generated automatically by Gradle\n# By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n")
+                println("Auto-created eula.txt in run directory")
+            }
+        }
+    }
+    if (name == "runGameTestServer") {
+        doFirst {
+            val runTestDir = file("run-test")
+            runTestDir.mkdirs()
+            val eulaFile = file("run-test/eula.txt")
+            if (!eulaFile.exists()) {
+                eulaFile.writeText("# Generated automatically by Gradle\n# By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n")
+                println("Auto-created eula.txt in run-test directory")
+            }
+        }
+    }
+}
+
 mixin {
     add(sourceSets.main.get(), "${modId}.refmap.json")
     config("${modId}.mixins.json")

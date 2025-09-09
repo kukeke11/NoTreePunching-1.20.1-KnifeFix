@@ -27,4 +27,50 @@ I hope you enjoy :)
 
  ~ AlcatrazEscapee
 
+## Development
+
+### Building the Mod
+
+This mod uses Gradle for building. To build the mod:
+
+```bash
+./gradlew clean
+./gradlew Forge:build
+```
+
+### Running Development Servers
+
+For development and testing, you can run the mod in several ways:
+
+```bash
+# Run the client with the mod loaded
+./gradlew Forge:runClient
+
+# Run a dedicated server with the mod loaded  
+./gradlew Forge:runServer
+
+# Run GameTest server for automated testing
+./gradlew Forge:runGameTestServer
+```
+
+#### EULA Automation
+
+**Important**: Minecraft servers require acceptance of the [Minecraft EULA](https://account.mojang.com/documents/minecraft_eula) before they will start. This mod's build system automatically handles EULA acceptance for development and CI environments.
+
+The build scripts will automatically:
+- Create `run/eula.txt` for development servers
+- Create `run-test/eula.txt` for GameTest servers
+- Set `eula=true` to accept the EULA
+
+This automation can also be run manually:
+```bash
+# Accept EULA for development server
+./gradlew Forge:acceptServerEula
+
+# Accept EULA for GameTest server  
+./gradlew Forge:acceptGameTestEula
+```
+
+**For CI/Production**: The EULA automation ensures that server runs work out-of-the-box in CI environments without manual intervention. The automation only affects the local development directories and does not modify any distributed files.
+
 ![No Tree Punching Splash Image](https://github.com/alcatrazEscapee/no-tree-punching/blob/1.15.x/img/splash.png?raw=true)

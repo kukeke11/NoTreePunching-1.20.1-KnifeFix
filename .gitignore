@@ -21,3 +21,4 @@
 !/LICENSE
 !/README.md
 !/doc/**/*.md
+!/.agentic-tools-mcp/.gitkeep
