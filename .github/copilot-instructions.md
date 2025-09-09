@@ -105,7 +105,7 @@ org.gradle.daemon=true
 
 **Expected behavior in different environments:**
 - **Local development:** Should launch Minecraft successfully
-- **CI/headless environments:** Will fail with "glfwInit failed" - this is normal and expected
+
 
 **Alternative validation for CI/headless environments:**
 ```bash
