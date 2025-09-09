@@ -1,10 +1,9 @@
 # No Tree Punching - Coding Agent Instructions
 
-# Agent policy for task storage
-- Always use the `agentic-tools` MCP with `workingDirectory: "."`.
-- After any tool call that changes `.agentic-tools-mcp/`, stage and commit those files
-  with a message referencing the current issue (e.g., "chore(agentic): sync tasks for #123").
-- Include the storage changes in the same PR as the code changes.
+# Agent policy for Agentic Tools storage
+- Always call `agentic-tools` with `workingDirectory` set to the repo root **absolute path** (e.g., `$GITHUB_WORKSPACE`), not `"."`.
+- Read/write only in `REPO_ROOT/.agentic-tools-mcp/`; if missing, create it and commit a `.gitkeep`.
+- After any change under `.agentic-tools-mcp/`, stage & commit those files with the current issue in the message, and include them in the same PR as code changes.
 
 ## Repository Overview
 **No Tree Punching** is a Minecraft Forge mod for version 1.20.1 that adds realistic tool requirements - blocks only drop items when broken with correct tools. The mod includes progression features like flint knapping, pottery, fire starting, and specialized tools (knives, saws, mattocks). This is a recently refactored codebase (84 Java files) that replaced deprecated Epsilon config system with modern Forge Config API.
