@@ -60,7 +60,7 @@ public class SharpToolHarvestTests
     /**
      * Test Case 1: Knife on Flower - Verify that breaking a flower (Poppy) with a flint knife correctly drops the flower item.
      */
-    @GameTest
+    @GameTest(template = "platform")
     public static void test_knife_on_flower_drops_item(GameTestHelper helper)
     {
         BlockPos flowerPos = new BlockPos(1, 1, 1); // Place on default template
@@ -87,7 +87,7 @@ public class SharpToolHarvestTests
     /**
      * Test Case 2: Hand on Flower - Verify that breaking a flower with a bare hand results in no item drop.
      */
-    @GameTest
+    @GameTest(template = "platform")
     public static void test_hand_on_flower_no_drops(GameTestHelper helper)
     {
         BlockPos flowerPos = new BlockPos(1, 1, 1); // Place on default template
@@ -117,7 +117,7 @@ public class SharpToolHarvestTests
     /**
      * Test Case 3: Knife on Grass - Verify that breaking a grass block with a flint knife correctly drops plant_fiber.
      */
-    @GameTest
+    @GameTest(template = "platform")
     public static void test_knife_on_grass_drops_plant_fiber(GameTestHelper helper)
     {
         BlockPos grassPos = new BlockPos(1, 1, 1); // Place on default template
@@ -144,7 +144,7 @@ public class SharpToolHarvestTests
     /**
      * Test Case 4: Hand on Grass - Verify that breaking a grass block with a bare hand results in no plant_fiber drop.
      */
-    @GameTest
+    @GameTest(template = "platform")
     public static void test_hand_on_grass_no_plant_fiber(GameTestHelper helper)
     {
         BlockPos grassPos = new BlockPos(1, 1, 1); // Place on default template
@@ -176,7 +176,7 @@ public class SharpToolHarvestTests
      * While not a true performance benchmark, this helps identify significant performance regressions
      * in block-breaking or drop-handling logic by observing execution time.
      */
-    @GameTest
+    @GameTest(template = "5x5_platform")
     public static void test_batch_flower_harvest_performance(GameTestHelper helper)
     {
         // Create a mock server player and give them a flint knife
@@ -234,7 +234,7 @@ public class SharpToolHarvestTests
      * Test verifying that the sharp tool system respects configuration settings.
      * This ensures that when the system is enabled, knives work as expected.
      */
-    @GameTest
+    @GameTest(template = "platform")
     public static void test_sharp_tool_system_configuration(GameTestHelper helper)
     {
         BlockPos flowerPos = new BlockPos(1, 1, 1); // Place on default template
