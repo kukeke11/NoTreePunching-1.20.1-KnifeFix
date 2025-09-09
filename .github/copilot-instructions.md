@@ -88,9 +88,6 @@ org.gradle.daemon=true
 
 **Development client/server:**
 ```bash
-# Launch Minecraft client with mod loaded (for testing)
-./gradlew Forge:runClient
-
 # Launch Minecraft server with mod loaded
 ./gradlew Forge:runServer
 
@@ -101,7 +98,7 @@ org.gradle.daemon=true
 ### Critical Validation After Java Changes
 **After any Java code changes, ALWAYS run:**
 ```bash
-./gradlew Forge:runClient
+./gradlew Forge:runGameTestServer
 ```
 - Must load to main menu without crashes (local development)
 - Check console for mod loading errors during startup
