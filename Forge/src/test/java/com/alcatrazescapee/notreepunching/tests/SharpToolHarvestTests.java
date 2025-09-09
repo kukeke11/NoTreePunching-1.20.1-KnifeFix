@@ -56,6 +56,7 @@ public class SharpToolHarvestTests
         // Break the block using the real harvest code path and capture the result
         return player.gameMode.destroyBlock(pos);
     }
+    
     /**
      * Test Case 1: Knife on Flower - Verify that breaking a flower (Poppy) with a flint knife correctly drops the flower item.
      */
