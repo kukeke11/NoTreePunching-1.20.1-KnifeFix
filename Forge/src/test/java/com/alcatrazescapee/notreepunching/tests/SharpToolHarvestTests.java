@@ -56,6 +56,7 @@ public class SharpToolHarvestTests
         // Break the block using the real harvest code path and capture the result
         return player.gameMode.destroyBlock(pos);
     }
+    
     /**
      * Test Case 1: Knife on Flower - Verify that breaking a flower (Poppy) with a flint knife correctly drops the flower item.
      */
@@ -122,7 +123,6 @@ public class SharpToolHarvestTests
         BlockPos grassPos = new BlockPos(1, 1, 1); // Place on default template
         
         // Place grass on the platform (short grass plant, not grass_block)
-        // Try GRASS first, fallback to SHORT_GRASS if available in mappings
         helper.setBlock(grassPos, Blocks.GRASS);
         
         // Create a mock server player and give them a flint knife
