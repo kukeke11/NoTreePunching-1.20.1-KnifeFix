@@ -36,6 +36,10 @@ sourceSets {
         java.srcDir("../Common/src/main/java")
         resources.srcDir("../Common/src/main/resources")
     }
+    test {
+        java.srcDir("src/test/java")
+        resources.srcDir("src/test/resources")
+    }
 }
 
 minecraft {
@@ -61,6 +65,19 @@ minecraft {
             mods {
                 create(modId) {
                     source(sourceSets.main.get())
+                }
+            }
+        }
+        create("gameTestServer") {
+            workingDirectory(file("run-test"))
+            arg("--nogui")
+            arg("-mixin.config=$modId.mixins.json")
+            property("forge.logging.console.level", "info")
+            property("forge.enabledGameTestNamespaces", modId)
+            mods {
+                create(modId) {
+                    source(sourceSets.main.get())
+                    source(sourceSets.test.get())
                 }
             }
         }
@@ -91,6 +108,10 @@ tasks.processResources {
             )
         )
     }
+}
+
+tasks.processTestResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.jar {
