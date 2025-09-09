@@ -221,3 +221,151 @@ These instructions have been comprehensively tested and validated on the current
 3. New build requirements are introduced by dependency updates
 
 **IMPORTANT:** Always start with cache clearing and memory optimization for reliable ForgeGradle builds.
+
+# No Tree Punching - Agent Coding Instructions
+
+**First Step: ALWAYS initialize with `agentic-tools, sequential-thinking and context7`.**
+
+---
+
+## Agent Storage Policy
+- Always call `agentic-tools` with `workingDirectory` set to the repository root's **absolute path** (e.g., `$GITHUB_WORKSPACE`), not `.` or a relative path.
+- All agent-related files must be read from or written to the `REPO_ROOT/.agentic-tools-mcp/` directory.
+- After making any changes under `.agentic-tools-mcp/`, you must stage and commit those files. These changes should be included in the same pull request as your code changes.
+
+---
+
+## Repository Overview
+- **Project:** No Tree Punching, a Minecraft Forge mod for version 1.20.1.
+- **Core Technologies:** Java 17, Minecraft Forge 47.4.0, Gradle 8.1.1, Mixins.
+- **Architecture:** A multi-module project with shared logic in `Common/` and Forge-specific code in `Forge/`.
+
+---
+
+## Step 1: Environment and Structure Verification
+
+1.  **Verify Java Version:** Before doing anything else, confirm you are using Java 17.
+    ```bash
+    java --version
+    ```
+    The output *must* show Java 17.
+
+2.  **Verify Project Structure:** Confirm the repository has the expected layout.
+    ```bash
+    ls -F
+    ```
+    The output must contain `Common/`, `Forge/`, `gradle/`, and `build.gradle.kts`. If it does not, stop and re-evaluate.
+
+---
+
+## Step 2: The ONLY Way to Build and Validate Changes
+
+This is the **single, mandatory workflow** for testing any Java code change. Do not deviate.
+
+1.  **Set Memory Allocation:** Always export `GRADLE_OPTS` to prevent memory-related build failures.
+    ```bash
+    export GRADLE_OPTS="-Xmx4G -Xms1G"
+    ```
+
+2.  **Run the Definitive Validation Task:** This single command cleans, builds, and runs the GameTests. It is the **only** way to confirm your changes are correct.
+    ```bash
+    ./gradlew clean Forge:runGameTestServer --refresh-dependencies --no-daemon
+    ```
+
+**IMPORTANT:** The `runGameTestServer` task is the ultimate proof of success. It compiles all necessary code and runs the functional tests that verify the mod's core mechanics. A successful run of this command means your changes are valid.
+
+---
+
+## Step 3: Creating the Final Artifact (For Release Only)
+
+You should only use this command if the goal is to produce the final distributable JAR file, similar to the `build.yml` workflow. For validation during development, always use the `runGameTestServer` command from Step 2.
+
+1.  **Set Memory Allocation:**
+    ```bash
+    export GRADLE_OPTS="-Xmx4G -Xms1G"
+    ```
+2.  **Run the Full Build:**
+    ```bash
+    ./gradlew Forge:build --stacktrace
+    ```
+3.  **Verify Artifacts:**
+    ```bash
+    ls -la Forge/build/libs/
+    ```
+    The output should contain `notreepunching-forge-{version}.jar`.
+
+---
+
+## Commands to AVOID
+
+The following commands are **not sufficient** for validation and should **NOT** be used on their own. The `runGameTestServer` task is superior as it performs all necessary steps.
+
+- **DO NOT USE:** `./gradlew Forge:compileJava` (Does not run tests)
+- **DO NOT USE:** `./gradlew Forge:processResources` (Does not compile or test)
+- **DO NOT USE:** `./gradlew Forge:jar` (Does not guarantee code is valid)
+
+---
+
+## GameTest System: The Source of Truth
+
+The `runGameTestServer` task executes critical functional tests.
+
+- **Coverage:**
+  - **Sharp Tool vs. Hand:** Validates that knives and other sharp tools behave differently from bare hands on plants.
+  - **Drop Logic:** Ensures correct items drop (or don't drop) based on the tool used.
+  - **Core Mechanics:** Tests that the fundamental features of the mod are working as designed.
+- **Success/Failure:**
+  - **PASS:** All GameTests complete successfully.
+  - **FAIL:** Any test fails, indicating a regression or incorrect implementation.
+
+---
+
+## Project Architecture and Code Guidelines
+
+### Module Structure
+```
+/                           # Root build configuration
+├── Common/                 # Platform-agnostic code
+│   └── src/main/java/com/alcatrazescapee/notreepunching/
+│       ├── NoTreePunching.java        # Main mod class
+│       ├── Config.java                # Config compatibility layer  
+│       ├── ForgeConfig.java          # New Forge config implementation
+│       ├── EventHandler.java         # Cross-platform event handling
+│       ├── common/                   # Core game mechanics
+│       │   ├── blocks/ModBlocks.java # Block registration
+│       │   ├── items/ModItems.java   # Item registration  
+│       │   ├── recipes/              # Recipe system & injection
+│       │   └── blockentity/          # Block entity implementations
+│       ├── mixin/                    # Mixin injections for vanilla changes
+│       ├── client/                   # Client-side code
+│       └── util/                     # Helper utilities
+└── Forge/                  # Forge-specific implementations
+    ├── src/main/java/      # Forge platform code
+    └── src/main/resources/ # Mod metadata, mixins config
+```
+
+### Key Configuration Files
+- **gradle.properties:** Mod metadata, versions, memory settings
+- **Common/src/main/resources/notreepunching.common.mixins.json:** Mixin configurations
+- **Forge/src/main/resources/META-INF/mods.toml:** Forge mod manifest
+
+## Code Change Guidelines
+
+### Module Structure
+- `/Common/`: Platform-agnostic code (core logic, items, blocks, mixins). **Make most changes here.**
+- `/Forge/`: Forge-specific implementation details.
+
+### Key Files for Changes
+- **Core Logic:** `Common/src/main/java/com/alcatrazescapee/notreepunching/common/`
+- **Item Definitions:** `Common/src/main/java/com/alcatrazescapee/notreepunching/common/items/ModItems.java`
+- **Block Definitions:** `Common/src/main/java/com/alcatrazescapee/notreepunching/common/blocks/ModBlocks.java`
+- **Configuration:** `Common/src/main/java/com/alcatrazescapee/notreepunching/ForgeConfig.java`
+- **Event Handling:** `Common/src/main/java/com/alcatrazescapee/notreepunching/EventHandler.java`
+- **Data Tags:** `Common/src/main/resources/data/notreepunching/tags/`
+
+### Architecture Notes
+- **Cross-platform design:** Common module contains shared logic, Forge implements platform specifics
+- **Registry system:** Uses deferred registries via `XPlatform` interface
+- **Configuration:** Dual system - new ForgeConfig.java with Config.java compatibility layer
+- **Recipe injection:** Safe event-based system (no unsafe mixins)
+- **Tool damage:** Centralized in utility classes
