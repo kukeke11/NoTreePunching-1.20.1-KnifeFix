@@ -6,8 +6,7 @@ Always use: agentic-tools, sequential-thinking and context7
 - After any change under `.agentic-tools-mcp/`, stage & commit those files with the current issue in the message, and include them in the same PR as code changes.
 
 ## Repository Overview
-**No Tree Punching** is a Minecraft Forge mod for version 1.20.1 that adds realistic tool requirements - blocks only drop items when broken with correct tools. The mod includes progression features like flint knapping, pottery, fire starting, and specialized tools (knives, saws, mattocks). This is a recently refactored codebase (84 Java files) that replaced deprecated Epsilon config system with modern Forge Config API.
-
+**No Tree Punching** is a Minecraft Forge mod for version 1.20.1 that adds realistic tool requirements
 **Key Technologies:** Java 17, Minecraft Forge 47.4.0, Gradle 8.1.1, Parchment mappings, Mixin framework
 **Project Size:** ~84 Java files, multi-module architecture (Common + Forge)
 
