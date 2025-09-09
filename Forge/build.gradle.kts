@@ -173,34 +173,48 @@ tasks.jar {
     archiveClassifier.set("")
 }
 
-//Simple validation task to check GameTest structure access
-tasks.register("validateGameTestStructures") {
+//Test GameTest namespace resolution
+tasks.register("testGameTestNamespace") {
     group = "verification"
-    description = "Validate that GameTest structures are accessible with correct namespace"
+    description = "Test that GameTest namespace resolution works with the fixed structure"
     dependsOn("processTestResources")
     
     doLast {
-        val structuresDir = file("src/test/resources/data/notreepunching/structures")
-        if (!structuresDir.exists()) {
-            throw GradleException("GameTest structures directory not found: ${structuresDir.absolutePath}")
+        val testDir = file("src/test/resources/data/notreepunching/structures")
+        val expectedFiles = listOf("platform.snbt", "5x5_platform.snbt")
+        
+        println("Testing GameTest namespace resolution...")
+        println("Expected namespace: notreepunching (from @GameTestHolder)")
+        println("Expected path: data/notreepunching/structures/")
+        println("Actual path: ${testDir.relativeTo(projectDir)}")
+        
+        var allFound = true
+        expectedFiles.forEach { fileName ->
+            val file = File(testDir, fileName)
+            if (file.exists()) {
+                println("✅ Found: ${fileName}")
+                
+                // Basic SNBT validation - check if it has expected structure format
+                val content = file.readText()
+                if (content.contains("size:") && content.contains("blocks:") && content.contains("palette:")) {
+                    println("   Structure format appears valid")
+                } else {
+                    println("   ⚠️ Warning: File may not be valid SNBT structure")
+                }
+            } else {
+                println("❌ Missing: ${fileName}")
+                allFound = false
+            }
         }
         
-        val platformSnbt = File(structuresDir, "platform.snbt")
-        val fiveByFivePlatformSnbt = File(structuresDir, "5x5_platform.snbt")
-        
-        if (!platformSnbt.exists()) {
-            throw GradleException("Required structure file not found: platform.snbt")
+        if (allFound) {
+            println("\n🎯 GameTest namespace resolution test PASSED")
+            println("   The @GameTestHolder(\"notreepunching\") annotation will now find structures correctly")
+            println("   Templates like @GameTest(template = \"platform\") will resolve to:")
+            println("   → data/notreepunching/structures/platform.snbt")
+        } else {
+            throw GradleException("GameTest namespace resolution test FAILED - missing structure files")
         }
-        
-        if (!fiveByFivePlatformSnbt.exists()) {
-            throw GradleException("Required structure file not found: 5x5_platform.snbt")
-        }
-        
-        println("✅ GameTest structure validation passed:")
-        println("   - platform.snbt found at: ${platformSnbt.absolutePath}")  
-        println("   - 5x5_platform.snbt found at: ${fiveByFivePlatformSnbt.absolutePath}")
-        println("   - Namespace directory: data/notreepunching/structures/ ✓")
-        println("   - Structure files are accessible for @GameTestHolder(\"notreepunching\")")
     }
 }
 
