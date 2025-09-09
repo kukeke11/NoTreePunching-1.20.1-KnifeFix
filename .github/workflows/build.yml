@@ -26,6 +26,37 @@ jobs:
           echo "Produced jars:"
           ls -1 build/libs || true
 
+      - name: Run GameTests with Error Capture
+        working-directory: ./Forge
+        run: |
+          # Create timestamped error directory
+          TIMESTAMP=$(date +'%Y-%m-%d_%H-%M-%S')
+          ERROR_DIR="../doc/errors/ci-gametest-${TIMESTAMP}"
+          mkdir -p "${ERROR_DIR}"
+          
+          echo "Running GameTests with logs captured to: ${ERROR_DIR}"
+          
+          # Run GameTests and capture output
+          if ./gradlew executeGameTests --stacktrace --warning-mode=summary 2>&1 | tee "${ERROR_DIR}/gametest-output.log"; then
+            echo "GameTests completed successfully"
+            echo "GAMETEST_STATUS=success" >> $GITHUB_ENV
+          else
+            echo "GameTests failed - logs captured"
+            echo "GAMETEST_STATUS=failed" >> $GITHUB_ENV
+            
+            # Copy additional logs if available
+            if [ -d "run-test/logs" ]; then
+              cp -r run-test/logs/* "${ERROR_DIR}/" || true
+            fi
+            
+            # Create failure summary
+            echo "GameTest execution failed at $(date)" > "${ERROR_DIR}/failure-summary.txt"
+            echo "Exit code: $?" >> "${ERROR_DIR}/failure-summary.txt"
+            
+            # Don't fail the build for now - just capture the failure
+          fi
+        continue-on-error: true
+
       - name: Prepare artifact (pick reobf shadow jar)
         run: |
           mkdir -p artifacts
@@ -47,6 +78,15 @@ jobs:
           echo "Artifact contents:"
           ls -1 artifacts
 
+      - name: Archive GameTest Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gametest-logs-${{ github.run_number }}
+          path: doc/errors/
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -54,3 +94,15 @@ jobs:
           path: artifacts
           if-no-files-found: error
           retention-days: 7
+
+      - name: GameTest Status Summary
+        if: always()
+        run: |
+          if [ "$GAMETEST_STATUS" = "success" ]; then
+            echo "✅ GameTests completed successfully"
+          elif [ "$GAMETEST_STATUS" = "failed" ]; then
+            echo "❌ GameTests failed - check gametest-logs artifact for details"
+            echo "Logs have been archived for review"
+          else
+            echo "⚠️ GameTests status unknown"
+          fi
