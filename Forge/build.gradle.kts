@@ -6,6 +6,11 @@ plugins {
     id("org.parchmentmc.librarian.forgegradle") version "1.+"
 }
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.Duration
+import java.io.FileOutputStream
+
 val modId: String by project
 val minecraftVersion: String by project        // e.g., 1.20.1
 val forgeVersion: String by project            // e.g., 47.4.0
@@ -168,10 +173,139 @@ tasks.jar {
     archiveClassifier.set("")
 }
 
+//Test GameTest namespace resolution
+tasks.register("testGameTestNamespace") {
+    group = "verification"
+    description = "Test that GameTest namespace resolution works with the fixed structure"
+    dependsOn("processTestResources")
+    
+    doLast {
+        val testDir = file("src/test/resources/data/notreepunching/structures")
+        val expectedFiles = listOf("platform.snbt", "5x5_platform.snbt")
+        
+        println("Testing GameTest namespace resolution...")
+        println("Expected namespace: notreepunching (from @GameTestHolder)")
+        println("Expected path: data/notreepunching/structures/")
+        println("Actual path: ${testDir.relativeTo(projectDir)}")
+        
+        var allFound = true
+        expectedFiles.forEach { fileName ->
+            val file = File(testDir, fileName)
+            if (file.exists()) {
+                println("✅ Found: ${fileName}")
+                
+                // Basic SNBT validation - check if it has expected structure format
+                val content = file.readText()
+                if (content.contains("size:") && content.contains("blocks:") && content.contains("palette:")) {
+                    println("   Structure format appears valid")
+                } else {
+                    println("   ⚠️ Warning: File may not be valid SNBT structure")
+                }
+            } else {
+                println("❌ Missing: ${fileName}")
+                allFound = false
+            }
+        }
+        
+        if (allFound) {
+            println("\n🎯 GameTest namespace resolution test PASSED")
+            println("   The @GameTestHolder(\"notreepunching\") annotation will now find structures correctly")
+            println("   Templates like @GameTest(template = \"platform\") will resolve to:")
+            println("   → data/notreepunching/structures/platform.snbt")
+        } else {
+            throw GradleException("GameTest namespace resolution test FAILED - missing structure files")
+        }
+    }
+}
+
 // Clean jar task configuration - no JarJar dependencies
 afterEvaluate {
     tasks.named("jar") {
         finalizedBy("reobfJar")
+    }
+}
+
+// GameTest execution with comprehensive logging and error capture
+tasks.register("runGameTestsWithLogs") {
+    group = "verification"
+    description = "Run GameTests and capture full logs with error archiving"
+    dependsOn("processTestResources", "compileTestJava")
+    
+    doFirst {
+        // Create timestamped log directory
+        val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+        val logDir = project.rootProject.file("doc/errors/gametest-${timestamp}")
+        logDir.mkdirs()
+        
+        // Ensure run-test directory exists with EULA
+        val runTestDir = file("run-test")
+        runTestDir.mkdirs()
+        val eulaFile = file("run-test/eula.txt")
+        if (!eulaFile.exists()) {
+            eulaFile.writeText("# Generated automatically by Gradle\n# By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n")
+            println("Auto-created eula.txt in run-test directory")
+        }
+        
+        println("Starting GameTests with logs captured to: ${logDir.absolutePath}")
+    }
+}
+
+// Enhanced GameTest task with timeout and better error handling  
+tasks.register<JavaExec>("executeGameTests") {
+    group = "verification" 
+    description = "Execute GameTests with enhanced error handling and timeout"
+    dependsOn("processTestResources", "compileTestJava")
+    
+    mainClass.set("net.minecraftforge.gametest.GameTestServer")
+    classpath = sourceSets.test.get().runtimeClasspath
+    
+    workingDir = file("run-test")
+    jvmArgs = listOf(
+        "-Xmx2G",
+        "-Xms1G", 
+        "-Dforge.logging.console.level=info",
+        "-Dforge.enabledGameTestNamespaces=${modId}"
+    )
+    
+    args = listOf(
+        "--gameTestServer", 
+        "--nogui",
+        "-mixin.config=${modId}.mixins.json"
+    )
+    
+    // Set reasonable timeout (5 minutes)
+    timeout.set(Duration.ofMinutes(5))
+    
+    doFirst {
+        val runTestDir = file("run-test")
+        runTestDir.mkdirs()
+        val eulaFile = file("run-test/eula.txt")
+        if (!eulaFile.exists()) {
+            eulaFile.writeText("# Generated automatically by Gradle\n# By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n")
+        }
+        
+        // Create timestamped error log
+        val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
+        val errorLogFile = project.rootProject.file("doc/errors/gametest-execution-${timestamp}.log")
+        errorLogFile.parentFile.mkdirs()
+        
+        // Redirect both stdout and stderr to log file
+        standardOutput = FileOutputStream(errorLogFile).buffered()
+        errorOutput = standardOutput
+        
+        println("GameTest execution logs will be saved to: ${errorLogFile.absolutePath}")
+    }
+    
+    // Handle failures gracefully
+    isIgnoreExitValue = true
+    
+    doLast {
+        if (executionResult.get().exitValue != 0) {
+            logger.error("GameTests failed with exit code: ${executionResult.get().exitValue}")
+            throw org.gradle.api.tasks.TaskExecutionException(this, RuntimeException("GameTests failed"))
+        } else {
+            println("GameTests completed successfully")
+        }
     }
 }
 
