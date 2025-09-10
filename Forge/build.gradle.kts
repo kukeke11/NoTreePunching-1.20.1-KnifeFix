@@ -129,6 +129,13 @@ tasks.configureEach {
                 eulaFile.writeText("# Generated automatically by Gradle\n# By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n")
                 println("Auto-created eula.txt in run-test directory")
             }
+            val src = file("src/test/resources/gameteststructures")
+            val dst = file("run-test/gameteststructures").apply { mkdirs() }
+            copy {
+                from(src)
+                into(dst)
+                include("**/*.snbt")
+            }
         }
     }
 }
@@ -174,7 +181,10 @@ afterEvaluate {
         finalizedBy("reobfJar")
     }
 }
-
+tasks.register<Copy>("copyGameTestStructures") {
+    from("src/test/resources/gameteststructures") // <-- put your .snbt here in source
+    into("run-test/gameteststructures")
+}
 tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.release.set(17)
