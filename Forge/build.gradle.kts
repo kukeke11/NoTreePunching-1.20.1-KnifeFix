@@ -129,12 +129,37 @@ tasks.configureEach {
                 eulaFile.writeText("# Generated automatically by Gradle\n# By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).\neula=true\n")
                 println("Auto-created eula.txt in run-test directory")
             }
+            // Copy template files to multiple locations GameTest might look for them
             val src = file("src/test/resources/gameteststructures")
             val dst = file("run-test/gameteststructures").apply { mkdirs() }
             copy {
                 from(src)
                 into(dst)
                 include("**/*.snbt")
+            }
+            
+            // Also copy from the data directory if it exists
+            val srcData = file("src/test/resources/data/${modId}/gameteststructures")
+            if (srcData.exists()) {
+                copy {
+                    from(srcData)
+                    into(dst)
+                    include("**/*.snbt")
+                }
+            }
+            
+            // Copy with simple names for GameTest framework
+            val srcGt = file("src/test/resources/gameteststructures")
+            if (srcGt.exists()) {
+                copy {
+                    from(srcGt) {
+                        rename { fileName ->
+                            fileName.replace("sharptoolharvesttests.", "")
+                        }
+                    }
+                    into(dst)
+                    include("**/*.snbt")
+                }
             }
         }
     }

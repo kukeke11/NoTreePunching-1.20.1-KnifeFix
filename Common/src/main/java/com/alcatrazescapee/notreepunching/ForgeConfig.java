@@ -46,6 +46,7 @@ public final class ForgeConfig
     // Sharp tool system config values
     public static final ForgeConfigSpec.BooleanValue enableSharpToolSystem;
     public static final ForgeConfigSpec.BooleanValue requireSharpToolForPlants;
+    public static final ForgeConfigSpec.BooleanValue enableSharpToolDebugLogging;
 
     private static final ForgeConfigSpec spec;
 
@@ -150,6 +151,14 @@ public final class ForgeConfig
                 "When disabled, plants drop items when harvested with any tool or by hand."
             )
             .define("requireSharpToolForPlants", true);
+
+        enableSharpToolDebugLogging = builder
+            .comment(
+                "Enables detailed debug logging for the sharp tool system.",
+                "When enabled, logs all sharp tool detections, plant harvesting decisions, and execution flow.",
+                "Useful for debugging but may impact performance. Default is false for performance."
+            )
+            .define("enableSharpToolDebugLogging", false);
 
         builder.pop();
         spec = builder.build();

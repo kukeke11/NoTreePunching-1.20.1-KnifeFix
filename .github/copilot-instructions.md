@@ -31,10 +31,12 @@ ls -la Forge/build/libs/
 # Should contain: notreepunching-forge-{version}.jar
 # 4. When you are asked to run feature tests
 export GRADLE_OPTS="-Xmx4G -Xms1G"
-./gradlew Forge:runGameTestServer --refresh-dependencies --no-daemon
+./gradlew Forge:runGameTestServer
 ```
 
 **Build timing:** 3-5 minutes for initial setup, 1-2 minutes for subsequent builds
+
+**IMPORTANT:** User prefers the fast version without --refresh-dependencies and --no-daemon flags
 
 ### Alternative Build Commands
 ```bash

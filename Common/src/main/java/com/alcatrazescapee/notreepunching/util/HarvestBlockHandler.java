@@ -19,11 +19,13 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
 import com.alcatrazescapee.notreepunching.Config;
+import com.alcatrazescapee.notreepunching.ForgeConfig;
 import com.alcatrazescapee.notreepunching.NoTreePunching;
 import com.alcatrazescapee.notreepunching.common.ModTags;
 import com.alcatrazescapee.notreepunching.mixin.AbstractBlockAccessor;
 import com.alcatrazescapee.notreepunching.mixin.AbstractBlockStateAccessor;
 import com.alcatrazescapee.notreepunching.util.SharpToolUtil;
+import com.alcatrazescapee.notreepunching.util.DebugUtil;
 
 
 public final class HarvestBlockHandler
@@ -154,56 +156,153 @@ public final class HarvestBlockHandler
 
     public static boolean isUsingCorrectToolToMine(BlockState state, @Nullable BlockPos pos, Player player)
     {
-        return isUsingCorrectTool(state, pos, player, ModTags.Blocks.ALWAYS_BREAKABLE, () -> Config.INSTANCE.doBlocksMineWithoutCorrectTool.getAsBoolean(), () -> Config.INSTANCE.doInstantBreakBlocksMineWithoutCorrectTool.getAsBoolean(), true);
+        // Start action tracking for this algorithm chain
+        String actionId = DebugUtil.startAction(player, state, pos, "TOOL_TO_MINE_CHECK");
+        
+        try
+        {
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolToMine() - Entry point");
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolToMine() - Player: %s", DebugUtil.getPlayerInfo(player));
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolToMine() - Block: %s", DebugUtil.getBlockInfo(state, pos));
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolToMine() - Tool: %s", DebugUtil.getDetailedToolInfo(player.getMainHandItem()));
+            
+            boolean result = isUsingCorrectTool(state, pos, player, ModTags.Blocks.ALWAYS_BREAKABLE, 
+                                              () -> Config.INSTANCE.doBlocksMineWithoutCorrectTool.getAsBoolean(), 
+                                              () -> Config.INSTANCE.doInstantBreakBlocksMineWithoutCorrectTool.getAsBoolean(), 
+                                              true);
+            
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolToMine() - isUsingCorrectTool returned: %s", result);
+            DebugUtil.endAction(actionId, result, "HarvestBlockHandler.isUsingCorrectToolToMine");
+            return result;
+        }
+        catch (Exception e)
+        {
+            DebugUtil.endActionWithError(actionId, e, "HarvestBlockHandler.isUsingCorrectToolToMine");
+            throw e;
+        }
     }
 
     public static boolean isUsingCorrectToolForDrops(BlockState state, @Nullable BlockPos pos, Player player)
     {
-        return isUsingCorrectTool(state, pos, player, ModTags.Blocks.ALWAYS_DROPS, () -> Config.INSTANCE.doBlocksDropWithoutCorrectTool.getAsBoolean(), () -> Config.INSTANCE.doInstantBreakBlocksDropWithoutCorrectTool.getAsBoolean(), false);
+        // Start action tracking for this algorithm chain
+        String actionId = DebugUtil.startAction(player, state, pos, "TOOL_FOR_DROPS_CHECK");
+        
+        try
+        {
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolForDrops() - Entry point");
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolForDrops() - Player: %s", DebugUtil.getPlayerInfo(player));
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolForDrops() - Block: %s", DebugUtil.getBlockInfo(state, pos));
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolForDrops() - Tool: %s", DebugUtil.getDetailedToolInfo(player.getMainHandItem()));
+            
+            boolean result = isUsingCorrectTool(state, pos, player, ModTags.Blocks.ALWAYS_DROPS, 
+                                              () -> Config.INSTANCE.doBlocksDropWithoutCorrectTool.getAsBoolean(), 
+                                              () -> Config.INSTANCE.doInstantBreakBlocksDropWithoutCorrectTool.getAsBoolean(), 
+                                              false);
+            
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectToolForDrops() - isUsingCorrectTool returned: %s", result);
+            
+            // This is often the FINAL point in the algorithm chain - mark as END
+            DebugUtil.endAction(actionId, result, "HarvestBlockHandler.isUsingCorrectToolForDrops");
+            return result;
+        }
+        catch (Exception e)
+        {
+            DebugUtil.endActionWithError(actionId, e, "HarvestBlockHandler.isUsingCorrectToolForDrops");
+            throw e;
+        }
     }
 
     private static boolean isUsingCorrectTool(BlockState state, @Nullable BlockPos pos, Player player, TagKey<Block> alwaysAllowTag, Supplier<Boolean> withoutCorrectTool, BooleanSupplier instantBreakBlocksWithoutCorrectTool, boolean checkingCanMine)
     {
-        if (withoutCorrectTool.get())
+        // Create action ID for detailed decision tracking
+        String actionId = DebugUtil.startAction(player, state, pos, "CORRECT_TOOL_LOGIC");
+        
+        try
         {
-            return true; // Feature is disabled, always allow
-        }
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectTool() - Starting decision tree | checkingCanMine=%s", checkingCanMine);
+            
+            // Check 1: Feature disabled globally
+            boolean featureDisabled = withoutCorrectTool.get();
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectTool() - Check 1: Feature disabled = %s", featureDisabled);
+            if (featureDisabled)
+            {
+                DebugUtil.endAction(actionId, true, "HarvestBlockHandler.isUsingCorrectTool - Feature disabled");
+                return true; // Feature is disabled, always allow
+            }
 
-        final float destroySpeed = getDestroySpeed(state, pos, player);
-        if (destroySpeed == 0 && instantBreakBlocksWithoutCorrectTool.getAsBoolean())
+            // Check 2: Instant break blocks and conditional disable
+            final float destroySpeed = getDestroySpeed(state, pos, player);
+            boolean isInstantBreak = destroySpeed == 0;
+            boolean instantBreakDisabled = instantBreakBlocksWithoutCorrectTool.getAsBoolean();
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectTool() - Check 2: destroySpeed=%.2f, isInstantBreak=%s, instantBreakDisabled=%s", destroySpeed, isInstantBreak, instantBreakDisabled);
+            if (isInstantBreak && instantBreakDisabled)
+            {
+                DebugUtil.endAction(actionId, true, "HarvestBlockHandler.isUsingCorrectTool - Instant break disabled");
+                return true; // Feature is conditionally disabled for instant break blocks, always allow
+            }
+
+            // Check 3: Always allow tag
+            boolean isAlwaysAllowed = state.is(alwaysAllowTag);
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectTool() - Check 3: Block in alwaysAllowTag = %s", isAlwaysAllowed);
+            if (isAlwaysAllowed)
+            {
+                DebugUtil.endAction(actionId, true, "HarvestBlockHandler.isUsingCorrectTool - Always allow tag");
+                return true; // Block is set to always allow
+            }
+
+            // Check 4: Vanilla tool correctness
+            final ItemStack stack = player.getMainHandItem();
+            boolean vanillaCorrect = stack.isCorrectToolForDrops(state);
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectTool() - Check 4: Vanilla isCorrectToolForDrops = %s | Tool: %s", vanillaCorrect, DebugUtil.getDetailedToolInfo(stack));
+            if (vanillaCorrect)
+            {
+                DebugUtil.endAction(actionId, true, "HarvestBlockHandler.isUsingCorrectTool - Vanilla correct tool");
+                return true; // Tool has already reported itself as the correct tool. This includes a tier check in vanilla.
+            }
+
+            // Check 5: Sharp tool system
+            boolean isSharpTool = SharpToolUtil.isSharpTool(stack);
+            boolean requiresSharpTool = SharpToolUtil.requiresSharpTool(state);
+            boolean sharpToolMatch = isSharpTool && requiresSharpTool;
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectTool() - Check 5: Sharp tool system | isSharpTool=%s, requiresSharpTool=%s, match=%s", isSharpTool, requiresSharpTool, sharpToolMatch);
+            if (sharpToolMatch)
+            {
+                DebugUtil.endAction(actionId, true, "HarvestBlockHandler.isUsingCorrectTool - Sharp tool match");
+                return true; // Sharp tool can harvest plants that require sharp tools
+            }
+
+            // Check 6: Mining speed check (only for canMine checks)
+            if (checkingCanMine)
+            {
+                float toolDestroySpeed = stack.getDestroySpeed(state);
+                boolean fasterThanNormal = toolDestroySpeed > 1.0f;
+                DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectTool() - Check 6: Mining speed | toolDestroySpeed=%.2f, fasterThanNormal=%s", toolDestroySpeed, fasterThanNormal);
+                if (fasterThanNormal)
+                {
+                    DebugUtil.endAction(actionId, true, "HarvestBlockHandler.isUsingCorrectTool - Faster mining speed");
+                    return true; // Tool reported itself as harvesting faster than normal, in which case when checking if we can *mine* the block, we return true.
+                }
+            }
+
+            // Check 7: Unknown tool requirements
+            boolean isMineable = state.is(ModTags.Blocks.MINEABLE);
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectTool() - Check 7: Block is mineable = %s", isMineable);
+            if (!isMineable)
+            {
+                DebugUtil.endAction(actionId, true, "HarvestBlockHandler.isUsingCorrectTool - Unknown tool requirements");
+                return true; // If we have no idea what tool can mine this block, we have to return true, as otherwise it's impossible to mine
+            }
+
+            // Final result: No conditions met
+            DebugUtil.debug(actionId, "HarvestBlockHandler.isUsingCorrectTool() - All checks failed, denying access");
+            DebugUtil.endAction(actionId, false, "HarvestBlockHandler.isUsingCorrectTool - All checks failed");
+            return false; // None of our checks have confirmed we can mine this block, so we can't
+        }
+        catch (Exception e)
         {
-            return true; // Feature is conditionally disabled for instant break blocks, always allow
+            DebugUtil.endActionWithError(actionId, e, "HarvestBlockHandler.isUsingCorrectTool");
+            throw e;
         }
-
-        if (state.is(alwaysAllowTag))
-        {
-            return true; // Block is set to always allow
-        }
-
-        final ItemStack stack = player.getMainHandItem();
-        if (stack.isCorrectToolForDrops(state))
-        {
-            return true; // Tool has already reported itself as the correct tool. This includes a tier check in vanilla.
-        }
-
-        // Check if this is a sharp tool being used on a plant that requires sharp tools
-        // This extends sharp tool functionality to any item tagged as sharp_tools, not just knives
-        if (SharpToolUtil.isSharpTool(stack) && SharpToolUtil.requiresSharpTool(state))
-        {
-            return true; // Sharp tool can harvest plants that require sharp tools
-        }
-
-        if (checkingCanMine && stack.getDestroySpeed(state) > 1.0f)
-        {
-            return true; // Tool reported itself as harvesting faster than normal, in which case when checking if we can *mine* the block, we return true.
-        }
-
-        if (!state.is(ModTags.Blocks.MINEABLE))
-        {
-            return true; // If we have no idea what tool can mine this block, we have to return true, as otherwise it's impossible to mine
-        }
-
-        return false; // None of our checks have confirmed we can mine this block, so we can't
     }
 
     private static float getDestroySpeed(BlockState state, @Nullable BlockPos pos, Player player)
